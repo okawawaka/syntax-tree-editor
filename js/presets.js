@@ -9,20 +9,16 @@ export const PRESETS = [
     id: 'basic-svo',
     title: '基本文 (Basic SVO)',
     description: '英語の基本的な主語・動詞・目的語（SVO）の統語構造',
-    code: `[TP 
-  [DP 
+    code: `[S 
+  [NP 
     [D The] 
-    [NP 
-      [N student]
-    ]
+    [N student]
   ] 
   [VP 
     [V read] 
-    [DP 
+    [NP 
       [D a] 
-      [NP 
-        [N book]
-      ]
+      [N book]
     ]
   ]
 ]`
@@ -31,31 +27,20 @@ export const PRESETS = [
     id: 'x-bar-theory',
     title: 'Xバー理論 (X-bar Theory)',
     description: '投射階層（XP - X\' - X）に基づく厳密な2分枝構造',
-    code: `[TP 
-  [DP 
-    [D' 
-      [D the] 
-      [NP 
-        [N' 
-          [N student]
-        ]
-      ]
+    code: `[S 
+  [NP 
+    [D the] 
+    [N' 
+      [N student]
     ]
   ] 
-  [T' 
-    [T [past]] 
-    [VP 
-      [V' 
-        [V read] 
-        [DP 
-          [D' 
-            [D a] 
-            [NP 
-              [N' 
-                [N book]
-              ]
-            ]
-          ]
+  [VP 
+    [V' 
+      [V read] 
+      [NP 
+        [D a] 
+        [N' 
+          [N book]
         ]
       ]
     ]
@@ -65,22 +50,18 @@ export const PRESETS = [
   {
     id: 'wh-movement',
     title: 'Wh移動と痕跡 (Wh-Movement & Arrow)',
-    description: 'CP領域へのWh移動と基底位置の痕跡（t_i）を結ぶ移動矢印',
-    code: `[CP 
-  [DP:wh Which book] 
-  [C' 
-    [C did] 
-    [TP 
-      [DP 
-        [D the] 
-        [NP 
-          [N student]
-        ]
-      ] 
-      [VP 
-        [V buy] 
-        [DP:wh t_i]
-      ]
+    description: '文頭（S\'）へのWh移動と基底位置の痕跡（t_i）を結ぶ移動矢印',
+    code: `[S' 
+  [NP:wh Which book] 
+  [S 
+    [Aux did] 
+    [NP 
+      [D the] 
+      [N student]
+    ] 
+    [VP 
+      [V buy] 
+      [NP:wh t_i]
     ]
   ]
 ]`
@@ -98,17 +79,17 @@ export const PRESETS = [
 ]`
   },
   {
-    id: 'embedded-cp',
-    title: 'CP埋め込み節 (Complementizer Phrase)',
-    description: '思考動詞によるthat補文節の埋め込み構造',
-    code: `[TP 
-  [DP [N Mary]] 
+    id: 'embedded-clause',
+    title: '埋め込み節 (Embedded Clause)',
+    description: '思考動詞によるthat補文節（S\'）の埋め込み構造',
+    code: `[S 
+  [NP [N Mary]] 
   [VP 
     [V thinks] 
-    [CP 
-      [C that] 
-      [TP 
-        [DP [N John]] 
+    [S' 
+      [Comp that] 
+      [S 
+        [NP [N John]] 
         [VP 
           [V left]
         ]
@@ -120,16 +101,16 @@ export const PRESETS = [
   {
     id: 'japanese-sov',
     title: '日本語 SOV文 (Japanese Structure)',
-    description: '主語・目的語・動詞の主要部末尾（Head-final）構造',
-    code: `[TP 
-  [DP 
-    [NP [N 太郎]] 
-    [K が]
+    description: '主語・目的語・動詞の基本語順構造',
+    code: `[S 
+  [NP 
+    [N 太郎] 
+    [P が]
   ] 
   [VP 
-    [DP 
-      [NP [N 本]] 
-      [K を]
+    [NP 
+      [N 本] 
+      [P を]
     ] 
     [V 読んだ]
   ]
@@ -139,15 +120,15 @@ export const PRESETS = [
     id: 'japanese-scrambling',
     title: '日本語 かき混ぜ (Scrambling)',
     description: '目的語が文頭へ移動（スクランブリング）した構造',
-    code: `[TP 
-  [DP:sc [NP [N 本]] [K を]] 
-  [TP 
-    [DP 
-      [NP [N 太郎]] 
-      [K が]
+    code: `[S 
+  [NP:sc [N 本] [P を]] 
+  [S 
+    [NP 
+      [N 太郎] 
+      [P が]
     ] 
     [VP 
-      [DP:sc t_i] 
+      [NP:sc t_i] 
       [V 読んだ]
     ]
   ]

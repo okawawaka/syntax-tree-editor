@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/style.css?v=20260904_4">
+  <link rel="stylesheet" href="css/style.css?v=20260904_5">
 </head>
 <body>
 
@@ -124,7 +124,7 @@
       <div class="editor-textarea-container">
         <textarea 
           id="bracket-editor" 
-          placeholder="[TP [DP [D The] [NP [N cat]]] [VP [V sat]]]" 
+          placeholder="[S [NP [D The] [N cat]] [VP [V sat]]]" 
           spellcheck="false"
         ></textarea>
         <div id="error-banner" class="error-banner"></div>
@@ -134,7 +134,7 @@
       <footer class="editor-guide">
         <div>💡 <strong>書き方:</strong> <kbd>[範疇 語彙]</kbd> または <kbd>[XP [X ...] [YP ...]]</kbd></div>
         <div>💡 <strong>三角形:</strong> <kbd>[NP [^ the small cat]]</kbd> で内部を省略</div>
-        <div>💡 <strong>移動矢印:</strong> <kbd>[DP@1 ...]</kbd> と <kbd>[t@1]</kbd> で自動矢印</div>
+        <div>💡 <strong>移動矢印:</strong> <kbd>[NP@1 ...]</kbd> と <kbd>[t@1]</kbd> で自動矢印</div>
       </footer>
     </section>
 
@@ -255,6 +255,6 @@
   <div id="toast" class="toast"></div>
 
   <!-- Main Application Entry Script (ES Module) -->
-  <script type="module" src="js/app.js?v=20260904_4"></script>
+  <script type="module" src="js/app.js?v=20260904_5"></script>
 </body>
 </html>
