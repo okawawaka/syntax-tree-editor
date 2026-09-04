@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Syntax Tree Editor | 言語学 構文木エディタ</title>
+  <meta name="description" content="言語学・生成文法のための直観的で美しい構文木（Syntax Tree）エディタ。ブラケット記法とGUIの双方向リアルタイム同期、Xバー理論、三角形省略、移動矢印、LaTeX (forest/tikz-qtree)・SVG・PNGエクスポートに対応。">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+
+  <!-- Typography: Inter & Noto Sans JP -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ========================================================================
+       APPLICATION HEADER (SWISS TYPOGRAPHY STYLE)
+       ======================================================================== -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-mark" title="Swiss Grid & Tree Symbol"></div>
+      <h1 class="brand-title">
+        SYNTAX TREE
+        <span class="tag">Linguistics</span>
+      </h1>
+    </div>
+
+    <div class="header-center">
+      <div class="preset-group">
+        <label for="preset-select">プリセット</label>
+        <select id="preset-select" class="select-control">
+          <!-- Populated by JS -->
+        </select>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button id="btn-share-url" class="btn" title="URLに状態を含めてコピー">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+        共有
+      </button>
+
+      <button id="btn-copy-png" class="btn" title="画像をクリップボードにコピー">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        画像コピー
+      </button>
+
+      <button id="btn-export-svg" class="btn" title="ベクター形式 (SVG) で保存">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        SVG
+      </button>
+
+      <button id="btn-export-png" class="btn btn-primary" title="高解像度 PNG で保存">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        PNG
+      </button>
+
+      <button id="btn-export-latex" class="btn btn-accent" title="LaTeX (forest / tikz-qtree) コードを表示">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        LaTeX
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       MAIN APPLICATION LAYOUT (SPLIT PANE)
+       ======================================================================== -->
+  <main class="app-main">
+    
+    <!-- LEFT PANEL: BRACKET CODE EDITOR -->
+    <section class="editor-panel">
+      <div class="panel-header">
+        <span class="panel-title">記法エディタ (Penn Treebank)</span>
+        <div class="panel-header-actions">
+          <button id="btn-format-bracket" class="btn-ghost-sm" title="インデント整形">整形</button>
+          <button id="btn-clear-bracket" class="btn-ghost-sm" title="クリア">クリア</button>
+        </div>
+      </div>
+
+      <!-- Quick Linguistics Notation Bar -->
+      <div class="symbol-bar">
+        <div class="symbol-bar-label">クイック記号入力</div>
+        <button class="quick-sym-btn" data-insert="'" title="X-bar プライム">X'</button>
+        <button class="quick-sym-btn" data-insert="̄" title="X-bar マクロン">X̄</button>
+        <button class="quick-sym-btn" data-insert="_i" title="下付きインデックス i">_i</button>
+        <button class="quick-sym-btn" data-insert="_j" title="下付きインデックス j">_j</button>
+        <button class="quick-sym-btn" data-insert="_1" title="下付き数字 1">_1</button>
+        <button class="quick-sym-btn" data-insert="[t_i]" title="痕跡（Trace）">[t_i]</button>
+        <button class="quick-sym-btn" data-insert="[^ ]" title="三角形（屋根）">[^\&nbsp;]</button>
+        <button class="quick-sym-btn" data-insert="@1" title="移動リンクタグ">@1</button>
+        <button class="quick-sym-btn" data-insert="[+wh]" title="統語素性 [+wh]">[+wh]</button>
+        <button class="quick-sym-btn" data-insert="[-past]" title="統語素性 [-past]">[-past]</button>
+        <button class="quick-sym-btn" data-insert="∅" title="ゼロ・空要素">∅</button>
+        <button class="quick-sym-btn" data-insert="λ" title="ラムダ束縛">λ</button>
+      </div>
+
+      <!-- Textarea with error feedback -->
+      <div class="editor-textarea-container">
+        <textarea 
+          id="bracket-editor" 
+          placeholder="[TP [DP [D The] [NP [N cat]]] [VP [V sat]]]" 
+          spellcheck="false"
+        ></textarea>
+        <div id="error-banner" class="error-banner"></div>
+      </div>
+
+      <!-- Syntax guide footer -->
+      <footer class="editor-guide">
+        <div>💡 <strong>書き方:</strong> <kbd>[範疇 語彙]</kbd> または <kbd>[XP [X ...] [YP ...]]</kbd></div>
+        <div>💡 <strong>三角形:</strong> <kbd>[NP [^ the small cat]]</kbd> で内部を省略</div>
+        <div>💡 <strong>移動矢印:</strong> <kbd>[DP@1 ...]</kbd> と <kbd>[t@1]</kbd> で自動矢印</div>
+      </footer>
+    </section>
+
+    <!-- RIGHT PANEL: PREVIEW & INTERACTIVE CANVAS -->
+    <section class="canvas-panel">
+      <!-- Pan / Zoom Viewport -->
+      <div id="tree-viewport" class="canvas-viewport">
+        <div id="tree-canvas" class="tree-canvas-layer">
+          <!-- SVG is injected here -->
+        </div>
+      </div>
+
+      <!-- Floating Zoom Controls -->
+      <div class="canvas-floating-controls">
+        <button id="btn-zoom-out" class="btn btn-icon-only" title="縮小">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+        <span id="zoom-level-text" class="zoom-text">100%</span>
+        <button id="btn-zoom-in" class="btn btn-icon-only" title="拡大">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+        <button id="btn-zoom-reset" class="btn btn-icon-only" title="リセット">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+        </button>
+      </div>
+
+      <!-- Selected Node Floating Actions (Direct Manipulation) -->
+      <div id="node-action-toolbar" class="node-action-toolbar">
+        <span id="selected-node-name" class="selected-node-badge">Node</span>
+        <div class="toolbar-separator"></div>
+        <button id="btn-node-edit" class="btn" title="ラベルを変更">編集</button>
+        <button id="btn-node-add-child" class="btn" title="子ノードを追加">+ 子</button>
+        <button id="btn-node-add-sibling" class="btn" title="兄弟ノードを追加">+ 兄弟</button>
+        <button id="btn-node-toggle-triangle" class="btn" title="三角形（屋根）を切り替え">△ 屋根</button>
+        <button id="btn-node-link-arrow" class="btn" title="別のノードへ移動矢印を引く">↳ 矢印</button>
+        <button id="btn-node-delete" class="btn" style="color: #D32F2F;" title="ノードを削除">削除</button>
+      </div>
+
+      <!-- Bottom Status & Typography Settings Bar -->
+      <div class="canvas-bottom-bar">
+        <div class="settings-group">
+          <!-- Branch Line Style -->
+          <div class="setting-item">
+            <label>枝の形状:</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" name="branch-style" value="straight" checked>
+                <span>直線</span>
+              </label>
+              <label>
+                <input type="radio" name="branch-style" value="curved">
+                <span>曲線</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Leaf Italic -->
+          <div class="setting-item">
+            <label for="toggle-leaf-italic">語彙イタリック:</label>
+            <input type="checkbox" id="toggle-leaf-italic" checked>
+          </div>
+
+          <!-- Font Size Slider -->
+          <div class="setting-item">
+            <label for="setting-font-size">文字:</label>
+            <input type="range" id="setting-font-size" class="slider-control" min="12" max="24" value="16">
+            <span id="font-size-val" class="setting-val">16px</span>
+          </div>
+
+          <!-- Level Height Slider -->
+          <div class="setting-item">
+            <label for="setting-level-height">階層高:</label>
+            <input type="range" id="setting-level-height" class="slider-control" min="40" max="100" value="64">
+            <span id="level-height-val" class="setting-val">64px</span>
+          </div>
+
+          <!-- Node Margin Slider -->
+          <div class="setting-item">
+            <label for="setting-node-margin">枝間隔:</label>
+            <input type="range" id="setting-node-margin" class="slider-control" min="14" max="60" value="28">
+            <span id="node-margin-val" class="setting-val">28px</span>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <span>クリックで直接ノード編集 / ドラッグでキャンバス移動</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================
+       MODAL DIALOG: LATEX EXPORT
+       ======================================================================== -->
+  <div id="latex-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">LaTeX 構文木コード エクスポート</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-tabs">
+        <button id="tab-latex-forest" class="tab-btn active">forest (推奨・現代標準)</button>
+        <button id="tab-latex-tikz" class="tab-btn">tikz-qtree</button>
+      </div>
+      <div class="modal-body">
+        <textarea id="latex-code-area" class="modal-textarea" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-copy-latex" class="btn btn-primary">コードをコピー</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast message -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Main Application Entry Script (ES Module) -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

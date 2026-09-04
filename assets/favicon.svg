@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="10" fill="#E30613"/>
+  <!-- Modern Geometric Tree Graph in Pure White -->
+  <!-- Root -->
+  <circle cx="32" cy="18" r="4.5" fill="#FFFFFF"/>
+  <!-- Branches -->
+  <line x1="32" y1="18" x2="19" y2="35" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+  <line x1="32" y1="18" x2="45" y2="35" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+  <!-- Left Child -->
+  <circle cx="19" cy="35" r="4" fill="#FFFFFF"/>
+  <!-- Right Sub-branches -->
+  <circle cx="45" cy="35" r="4" fill="#FFFFFF"/>
+  <line x1="45" y1="35" x2="38" y2="48" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="45" y1="35" x2="52" y2="48" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="38" cy="48" r="3" fill="#FFFFFF"/>
+  <circle cx="52" cy="48" r="3" fill="#FFFFFF"/>
+</svg>
