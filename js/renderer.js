@@ -120,16 +120,43 @@ export class TreeRenderer {
         const rightX = childTopX + halfW;
         const triBottomY = childTopY + 2;
 
-        // Draw triangle polygon: apex (parentBottom), bottom-left, bottom-right
-        out += `
-          <polygon 
-            points="${parentBottomX},${parentBottomY} ${leftX},${triBottomY} ${rightX},${triBottomY}" 
-            fill="none" 
-            stroke="${this.strokeColor}" 
-            stroke-width="1.6" 
-            class="tree-triangle"
-          />
-        `;
+        // If parent has only this child, parentBottomX === childTopX, so apex connects directly to parent
+        // If parent has multiple children (parent is offset from child),
+        // we connect parent to apex with a branch line, and draw a symmetric isosceles triangle roof at childTopX!
+        const isCentered = Math.abs(parentBottomX - childTopX) < 2;
+
+        if (isCentered) {
+          out += `
+            <polygon 
+              points="${childTopX},${parentBottomY} ${leftX},${triBottomY} ${rightX},${triBottomY}" 
+              fill="none" 
+              stroke="${this.strokeColor}" 
+              stroke-width="1.6" 
+              class="tree-triangle"
+            />
+          `;
+        } else {
+          // Apex placed symmetrically above child base
+          const apexY = Math.max(parentBottomY + 12, triBottomY - 24);
+          out += `
+            <line 
+              x1="${parentBottomX}" 
+              y1="${parentBottomY}" 
+              x2="${childTopX}" 
+              y2="${apexY}" 
+              stroke="${this.strokeColor}" 
+              stroke-width="1.6" 
+              class="tree-branch"
+            />
+            <polygon 
+              points="${childTopX},${apexY} ${leftX},${triBottomY} ${rightX},${triBottomY}" 
+              fill="none" 
+              stroke="${this.strokeColor}" 
+              stroke-width="1.6" 
+              class="tree-triangle"
+            />
+          `;
+        }
       } else {
         // Standard branch line
         if (this.branchType === 'curved') {

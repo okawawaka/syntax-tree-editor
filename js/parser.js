@@ -128,18 +128,32 @@ export class TreeParser {
       if (cursor < tokens.length && peek().type === ']') {
         consume(']');
 
-        // Case 1: Pure triangle roof node without category, e.g. [^ the hungry cat]
+        // Case 1: If triangle marker was present (^NP a wug or ^ the cat)
         if (isTriangle) {
-          // If rawLabel was [^ the cat], the whole thing is the phrase
-          return new TreeNode(rawLabel, [], true, true);
+          const firstSpace = rawLabel.indexOf(' ');
+          // If there is a space, e.g. [^NP a wug], the first word is category, rest is triangle phrase!
+          if (firstSpace !== -1) {
+            const cat = rawLabel.substring(0, firstSpace).trim();
+            const phrase = rawLabel.substring(firstSpace + 1).trim();
+            const leafNode = new TreeNode(phrase, [], true, true);
+            return new TreeNode(cat, [leafNode], false, false);
+          } else {
+            // e.g. [^cat] or [^ cat] with no category
+            return new TreeNode(rawLabel, [], true, true);
+          }
         }
 
-        // Case 2: [Category Word] shorthand, e.g. [N cat] or [DP John]
+        // Case 2: [Category Word] shorthand, e.g. [N cat] or [NP ^a wug]
         const firstSpace = rawLabel.indexOf(' ');
         if (firstSpace !== -1) {
           const cat = rawLabel.substring(0, firstSpace).trim();
-          const word = rawLabel.substring(firstSpace + 1).trim();
-          const leafNode = new TreeNode(word, [], true, false);
+          let word = rawLabel.substring(firstSpace + 1).trim();
+          let wordTri = false;
+          if (word.startsWith('^')) {
+            wordTri = true;
+            word = word.substring(1).trim();
+          }
+          const leafNode = new TreeNode(word, [], true, wordTri);
           return new TreeNode(cat, [leafNode], false, false);
         } else {
           // Just a single word or label with no children e.g. [cat]
