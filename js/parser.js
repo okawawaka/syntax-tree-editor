@@ -293,9 +293,6 @@ export class TreeParser {
 
     const buildLabel = (n) => {
       let base = n.displayLabel !== undefined && n.displayLabel !== null ? n.displayLabel : n.label;
-      if (n.isTriangle && !base.startsWith('^')) {
-        base = '^' + base;
-      }
       if (n.movementId) {
         base += '@' + n.movementId;
       }
@@ -310,13 +307,20 @@ export class TreeParser {
 
     const labelStr = buildLabel(node);
 
+    // Leaf / empty node e.g. [cat] or [t_i]
     if (!node.children || node.children.length === 0) {
-      return `[${labelStr}]`;
+      const triPrefix = node.isTriangle ? '^' : '';
+      return `${pad}[${triPrefix}${labelStr}]`;
     }
 
+    // Pre-terminal node with a single leaf child, e.g. [D The] or [^NP a wug]
     if (node.children.length === 1 && node.children[0].isLeaf && (!node.children[0].children || !node.children[0].children.length)) {
-      const childStr = buildLabel(node.children[0]);
-      return `[${labelStr} ${childStr}]`;
+      const child = node.children[0];
+      const childStr = buildLabel(child);
+      if (child.isTriangle || node.isTriangle) {
+        return `${pad}[^${labelStr} ${childStr}]`;
+      }
+      return `${pad}[${labelStr} ${childStr}]`;
     }
 
     const childStrings = node.children.map(c => this.stringify(c, indent, level + 1));
