@@ -67,48 +67,32 @@ header.app-header {
 .brand-section {
   display: flex;
   align-items: center;
-  gap: 8px;
   flex-shrink: 0;
   white-space: nowrap;
 }
 
-.brand-logo {
-  width: 28px;
-  height: 28px;
-  background-color: var(--ink-900);
-  color: var(--pure-white);
-  border-radius: 5px;
+.title-wrap {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: background-color 0.15s ease;
+  align-items: baseline;
+  gap: 8px;
 }
 
-.brand-logo:hover {
-  background-color: var(--swiss-red);
-}
-
-.brand-title {
-  font-size: 13.5px;
-  font-weight: 700;
+.app-title {
+  font-size: 15px;
+  font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--ink-900);
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  margin: 0;
   white-space: nowrap;
 }
 
-.brand-title span.tag {
-  font-size: 9px;
+.app-subtitle {
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink-400);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 1.5px 4.5px;
-  background-color: var(--ink-100);
-  color: var(--ink-500);
-  border-radius: 2px;
+  white-space: nowrap;
 }
 
 .header-center {
@@ -255,12 +239,27 @@ header.app-header {
   justify-content: space-between;
 }
 
-.panel-title {
+.btn-help-indicator {
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-500);
+  letter-spacing: 0.04em;
+  padding: 4px 9px;
+  background: var(--pure-white);
+  border: 1px solid var(--ink-300);
+  color: var(--ink-900);
+  cursor: pointer;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-help-indicator:hover {
+  background: var(--ink-900);
+  color: var(--pure-white);
+  border-color: var(--ink-900);
 }
 
 .panel-header-actions {
@@ -370,25 +369,7 @@ header.app-header {
   display: block;
 }
 
-/* Syntax Guide Footer */
-.editor-guide {
-  padding: 10px 14px;
-  background: var(--ink-50);
-  border-top: var(--border-subtle);
-  font-size: 11px;
-  color: var(--ink-500);
-  line-height: 1.5;
-}
 
-.editor-guide kbd {
-  background: var(--pure-white);
-  border: 1px solid var(--ink-300);
-  padding: 1px 4px;
-  border-radius: 3px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--ink-800);
-}
 
 /* --------------------------------------------------------------------------
    RIGHT: PREVIEW & CANVAS
@@ -727,6 +708,98 @@ header.app-header {
   justify-content: flex-end;
   gap: 8px;
   background: var(--ink-50);
+}
+
+/* Help Modal Specific Styles (Swiss-Style, matching IPA Editor) */
+.modal-box-lg {
+  width: 640px;
+  max-width: 92vw;
+  max-height: 85vh;
+}
+
+.modal-help-body {
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--ink-800);
+  padding: 20px 24px;
+}
+
+.modal-help-body h3 {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-900);
+  margin: 16px 0 8px;
+  border-bottom: 1px solid var(--ink-200);
+  padding-bottom: 4px;
+}
+
+.modal-help-body h3:first-child {
+  margin-top: 0;
+}
+
+.modal-help-body p {
+  margin-bottom: 8px;
+}
+
+.modal-help-body ul {
+  margin-left: 18px;
+  margin-bottom: 14px;
+}
+
+.modal-help-body li {
+  margin-bottom: 6px;
+  font-size: 12.5px;
+}
+
+.modal-help-body kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--ink-100);
+  border: 1px solid var(--ink-300);
+  border-radius: 2px;
+}
+
+.modal-help-body code {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  background: var(--ink-100);
+  padding: 1px 4px;
+  border-radius: 2px;
+  color: var(--ink-900);
+}
+
+.modal-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-900);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 6px 12px;
+  border: 1px solid var(--ink-900);
+  border-radius: 3px;
+  transition: all 0.15s ease;
+  margin-top: 4px;
+}
+
+.modal-link:hover {
+  background: var(--ink-900);
+  color: var(--pure-white) !important;
+}
+
+.modal-link-icon {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
 }
 
 /* --------------------------------------------------------------------------

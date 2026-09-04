@@ -96,8 +96,30 @@ export class UIController {
     document.getElementById('btn-node-link-arrow')?.addEventListener('click', () => this.startLinkArrowMode());
     document.getElementById('btn-node-delete')?.addEventListener('click', () => this.deleteSelectedNode());
 
+    // Help button trigger
+    document.getElementById('btn-show-help')?.addEventListener('click', () => {
+      this.toggleHelpModal();
+    });
+
     // Keyboard shortcuts
     window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.deselectNode();
+        this.cancelLinkArrowMode();
+        this.closeModals();
+        return;
+      }
+
+      // '?' command: Open / Toggle Operating Instructions Modal
+      if (e.key === '?' || (e.shiftKey && (e.key === '/' || e.key === '?'))) {
+        const isInputFocused = e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT';
+        if (!isInputFocused || e.altKey || e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          this.toggleHelpModal();
+          return;
+        }
+      }
+
       if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
 
       if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -105,10 +127,6 @@ export class UIController {
           e.preventDefault();
           this.deleteSelectedNode();
         }
-      } else if (e.key === 'Escape') {
-        this.deselectNode();
-        this.cancelLinkArrowMode();
-        this.closeModals();
       }
     });
   }
@@ -338,5 +356,19 @@ export class UIController {
 
   closeModals() {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('visible'));
+  }
+
+  openHelpModal() {
+    const modal = document.getElementById('help-modal');
+    if (modal) {
+      modal.classList.add('visible');
+    }
+  }
+
+  toggleHelpModal() {
+    const modal = document.getElementById('help-modal');
+    if (modal) {
+      modal.classList.toggle('visible');
+    }
   }
 }

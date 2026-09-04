@@ -3,12 +3,12 @@
  * Integrates Parser, Layout, Renderer, UI, Presets and Exporters.
  */
 
-import { TreeNode, TreeParser } from './parser.js?v=20260904_5';
-import { TreeLayout } from './tree-layout.js?v=20260904_5';
-import { TreeRenderer } from './renderer.js?v=20260904_5';
-import { LatexExporter } from './latex-exporter.js?v=20260904_5';
-import { PRESETS } from './presets.js?v=20260904_5';
-import { UIController } from './ui-controller.js?v=20260904_5';
+import { TreeNode, TreeParser } from './parser.js?v=20260904_6';
+import { TreeLayout } from './tree-layout.js?v=20260904_6';
+import { TreeRenderer } from './renderer.js?v=20260904_6';
+import { LatexExporter } from './latex-exporter.js?v=20260904_6';
+import { PRESETS } from './presets.js?v=20260904_6';
+import { UIController } from './ui-controller.js?v=20260904_6';
 
 class SyntaxTreeApp {
   constructor() {
