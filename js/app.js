@@ -50,15 +50,16 @@ class SyntaxTreeApp {
     this.setupExportListeners();
     this.setupSettingListeners();
 
-    // Load initial tree from URL hash or localStorage or default preset (Basic SVO)
-    const savedTree = this.loadInitialContent();
+    // Initial preset: Default to Basic SVO (Preset 0) unless shared via URL hash
+    const initialCode = this.loadInitialContent();
     const editor = document.getElementById('bracket-editor');
-    editor.value = savedTree;
-    this.parseAndRender(savedTree);
+    editor.value = initialCode;
+    this.parseAndRender(initialCode);
+    this.syncPresetSelect(initialCode);
   }
 
   loadInitialContent() {
-    // 1. URL Hash
+    // 1. Prioritize URL Hash if user opened an explicit shared link
     if (window.location.hash && window.location.hash.length > 2) {
       try {
         const decoded = decodeURIComponent(window.location.hash.substring(1));
@@ -70,13 +71,7 @@ class SyntaxTreeApp {
       }
     }
 
-    // 2. LocalStorage
-    const saved = localStorage.getItem('syntax_tree_editor_content');
-    if (saved && saved.trim()) {
-      return saved;
-    }
-
-    // 3. Default preset: Basic SVO
+    // 2. Default preset: Always Basic SVO for a clean, consistent first impression
     return PRESETS[0].code;
   }
 
@@ -106,6 +101,18 @@ class SyntaxTreeApp {
     });
   }
 
+  syncPresetSelect(currentCode) {
+    const select = document.getElementById('preset-select');
+    if (!select) return;
+
+    const trimmed = (currentCode || '').trim().replace(/\s+/g, ' ');
+    const matchedIdx = PRESETS.findIndex(p => p.code.trim().replace(/\s+/g, ' ') === trimmed);
+
+    if (matchedIdx !== -1) {
+      select.value = String(matchedIdx);
+    }
+  }
+
   setupEditorListeners() {
     const editor = document.getElementById('bracket-editor');
     let debounceTimer = null;
@@ -114,6 +121,7 @@ class SyntaxTreeApp {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         this.parseAndRender(editor.value);
+        this.syncPresetSelect(editor.value);
         this.saveState(editor.value);
       }, 150);
     });
@@ -333,7 +341,6 @@ class SyntaxTreeApp {
   saveState(text) {
     try {
       localStorage.setItem('syntax_tree_editor_content', text);
-      window.location.hash = encodeURIComponent(text);
     } catch (e) {
       console.warn('Storage save failed', e);
     }
@@ -367,51 +374,88 @@ class SyntaxTreeApp {
 
   exportPNG(transparent = false) {
     if (!this.layoutData) return;
+    this.ui.showToast('PNGを生成中...');
     this.renderToCanvas(transparent, (canvas) => {
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = transparent ? 'syntax-tree-transparent.png' : 'syntax-tree.png';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        this.ui.showToast('PNGをダウンロードしました');
-      }, 'image/png');
+      try {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            this.ui.showToast('PNG生成に失敗しました');
+            return;
+          }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = transparent ? 'syntax-tree-transparent.png' : 'syntax-tree.png';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          this.ui.showToast('PNGをダウンロードしました');
+        }, 'image/png');
+      } catch (err) {
+        console.error('Export PNG failed:', err);
+        this.ui.showToast('PNGダウンロードに失敗しました');
+      }
+    }, (err) => {
+      console.error('Canvas render failed:', err);
+      this.ui.showToast('画像レンダリングに失敗しました');
     });
   }
 
   copyPNGToClipboard() {
     if (!this.layoutData) return;
     if (!navigator.clipboard || !navigator.clipboard.write) {
-      this.ui.showToast('お使いのブラウザは画像コピーに対応していません');
+      this.ui.showToast('お使いのブラウザは画像クリップボードコピーに対応していません');
       return;
     }
 
-    this.renderToCanvas(false, (canvas) => {
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const item = new ClipboardItem({ 'image/png': blob });
-        navigator.clipboard.write([item]).then(() => {
-          this.ui.showToast('PNG画像をクリップボードにコピーしました！');
-        }).catch(err => {
-          console.error(err);
-          this.ui.showToast('コピーに失敗しました');
-        });
-      }, 'image/png');
+    // Wrap canvas rendering into a Promise so ClipboardItem is created synchronously
+    // within the user activation context
+    const blobPromise = new Promise((resolve, reject) => {
+      this.renderToCanvas(false, (canvas) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Canvas toBlob returned null'));
+        }, 'image/png');
+      }, (err) => reject(err));
     });
+
+    try {
+      const item = new ClipboardItem({ 'image/png': blobPromise });
+      navigator.clipboard.write([item]).then(() => {
+        this.ui.showToast('PNG画像をクリップボードにコピーしました！');
+      }).catch(err => {
+        console.error('Clipboard write failed:', err);
+        this.ui.showToast('クリップボードへの書き込みに失敗しました（権限設定をご確認ください）');
+      });
+    } catch (err) {
+      console.warn('Direct ClipboardItem promise failed, attempting fallback...', err);
+      // Fallback for older Safari
+      blobPromise.then(blob => {
+        const item = new ClipboardItem({ 'image/png': blob });
+        return navigator.clipboard.write([item]);
+      }).then(() => {
+        this.ui.showToast('PNG画像をクリップボードにコピーしました！');
+      }).catch(e => {
+        console.error(e);
+        this.ui.showToast('画像コピーに失敗しました');
+      });
+    }
   }
 
-  renderToCanvas(transparent, callback) {
+  renderToCanvas(transparent, callback, errorCallback) {
+    if (!this.layoutData) {
+      if (errorCallback) errorCallback(new Error('No layout data'));
+      return;
+    }
+
     const scale = 2; // Retina 2x
     const { width, height } = this.layoutData;
     const svgString = this.renderer.renderToSVG(this.layoutData, this.currentMovements);
 
     const canvas = document.createElement('canvas');
-    canvas.width = width * scale;
-    canvas.height = height * scale;
+    canvas.width = Math.max(Math.ceil(width * scale), 100);
+    canvas.height = Math.max(Math.ceil(height * scale), 100);
     const ctx = canvas.getContext('2d');
 
     if (!transparent) {
@@ -420,16 +464,42 @@ class SyntaxTreeApp {
     }
 
     const img = new Image();
-    const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
 
     img.onload = () => {
-      ctx.drawImage(img, 0, 0, width * scale, height * scale);
-      URL.revokeObjectURL(url);
-      callback(canvas);
+      try {
+        ctx.drawImage(img, 0, 0, width * scale, height * scale);
+        callback(canvas);
+      } catch (err) {
+        console.error('Canvas drawImage error:', err);
+        if (errorCallback) errorCallback(err);
+      }
     };
 
-    img.src = url;
+    img.onerror = (e) => {
+      console.warn('Base64 SVG load failed, attempting UTF-8 data URI fallback...', e);
+      const fallbackImg = new Image();
+      fallbackImg.onload = () => {
+        try {
+          ctx.drawImage(fallbackImg, 0, 0, width * scale, height * scale);
+          callback(canvas);
+        } catch (err) {
+          if (errorCallback) errorCallback(err);
+        }
+      };
+      fallbackImg.onerror = (err) => {
+        console.error('All SVG to Image conversions failed:', err);
+        if (errorCallback) errorCallback(err);
+      };
+      fallbackImg.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svgString);
+    };
+
+    // Use safe base64 Data URI for maximum SVG rasterization compatibility
+    try {
+      const base64 = btoa(unescape(encodeURIComponent(svgString)));
+      img.src = 'data:image/svg+xml;base64,' + base64;
+    } catch (e) {
+      img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svgString);
+    }
   }
 }
 
