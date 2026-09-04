@@ -7,7 +7,7 @@
 export class TreeRenderer {
   constructor(options = {}) {
     this.branchType = options.branchType || 'straight'; // 'straight' or 'curved'
-    this.fontFamily = options.fontFamily || 'Inter, -apple-system, BlinkMacSystemFont, "Noto Sans JP", "Hiragino Sans", sans-serif';
+    this.fontFamily = options.fontFamily || "Inter, -apple-system, BlinkMacSystemFont, 'Noto Sans JP', 'Hiragino Sans', sans-serif";
     this.fontSize = options.fontSize || 16;
     this.strokeColor = options.strokeColor || '#111111';
     this.arrowColor = options.arrowColor || '#E30613'; // Swiss Red

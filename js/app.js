@@ -50,28 +50,35 @@ class SyntaxTreeApp {
     this.setupExportListeners();
     this.setupSettingListeners();
 
-    // Initial preset: Default to Basic SVO (Preset 0) unless shared via URL hash
+    // Initial preset: Default to Basic SVO (Preset 0) unless explicitly shared via ?share=1#...
     const initialCode = this.loadInitialContent();
     const editor = document.getElementById('bracket-editor');
     editor.value = initialCode;
     this.parseAndRender(initialCode);
     this.syncPresetSelect(initialCode);
+
+    // Clean up residual hash from address bar so page reloads always stay clean
+    if (window.location.hash && !window.location.search.includes('share=')) {
+      try {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      } catch (e) {}
+    }
   }
 
   loadInitialContent() {
-    // 1. Prioritize URL Hash if user opened an explicit shared link
-    if (window.location.hash && window.location.hash.length > 2) {
+    // Only restore from hash if user arrived via an explicit share link (?share=1#...)
+    if (window.location.search.includes('share=') && window.location.hash && window.location.hash.length > 2) {
       try {
         const decoded = decodeURIComponent(window.location.hash.substring(1));
         if (decoded.startsWith('[') && decoded.endsWith(']')) {
           return decoded;
         }
       } catch (e) {
-        console.warn('Failed to parse URL hash', e);
+        console.warn('Failed to parse share URL hash', e);
       }
     }
 
-    // 2. Default preset: Always Basic SVO for a clean, consistent first impression
+    // Default: Always Basic SVO (Preset 0)
     return PRESETS[0].code;
   }
 
@@ -425,20 +432,21 @@ class SyntaxTreeApp {
       navigator.clipboard.write([item]).then(() => {
         this.ui.showToast('PNG画像をクリップボードにコピーしました！');
       }).catch(err => {
-        console.error('Clipboard write failed:', err);
-        this.ui.showToast('クリップボードへの書き込みに失敗しました（権限設定をご確認ください）');
+        console.warn('Clipboard write failed, downloading PNG as fallback...', err);
+        this.exportPNG(false);
+        this.ui.showToast('クリップボード制限のため、PNG画像を保存しました');
       });
     } catch (err) {
       console.warn('Direct ClipboardItem promise failed, attempting fallback...', err);
-      // Fallback for older Safari
       blobPromise.then(blob => {
         const item = new ClipboardItem({ 'image/png': blob });
         return navigator.clipboard.write([item]);
       }).then(() => {
         this.ui.showToast('PNG画像をクリップボードにコピーしました！');
       }).catch(e => {
-        console.error(e);
-        this.ui.showToast('画像コピーに失敗しました');
+        console.warn('Fallback copy failed, downloading PNG...', e);
+        this.exportPNG(false);
+        this.ui.showToast('PNG画像をダウンロードしました');
       });
     }
   }

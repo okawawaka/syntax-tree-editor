@@ -125,12 +125,25 @@ export class UIController {
   }
 
   resetView() {
-    this.zoom = 1.0;
-    this.panX = 0;
-    this.panY = 0;
+    if (this.viewport && this.app.layoutData) {
+      const vpW = this.viewport.clientWidth || 600;
+      const vpH = this.viewport.clientHeight || 500;
+      const treeW = this.app.layoutData.width || 400;
+      const treeH = this.app.layoutData.height || 350;
+
+      // Fit zoom if tree is larger than viewport
+      const fitZoom = Math.min(1.0, Math.max(0.4, Math.min((vpW - 40) / treeW, (vpH - 40) / treeH)));
+      this.zoom = fitZoom;
+      this.panX = 0;
+      this.panY = 0;
+    } else {
+      this.zoom = 1.0;
+      this.panX = 0;
+      this.panY = 0;
+    }
     this.updateTransform();
     const zoomDisplay = document.getElementById('zoom-level-text');
-    if (zoomDisplay) zoomDisplay.textContent = '100%';
+    if (zoomDisplay) zoomDisplay.textContent = `${Math.round(this.zoom * 100)}%`;
   }
 
   updateTransform() {

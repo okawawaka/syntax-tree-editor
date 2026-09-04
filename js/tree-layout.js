@@ -9,7 +9,7 @@
 export class TreeLayout {
   constructor(options = {}) {
     this.fontSize = options.fontSize || 16;
-    this.fontFamily = options.fontFamily || 'Inter, -apple-system, BlinkMacSystemFont, "Noto Sans JP", "Hiragino Sans", sans-serif';
+    this.fontFamily = options.fontFamily || "Inter, -apple-system, BlinkMacSystemFont, 'Noto Sans JP', 'Hiragino Sans', sans-serif";
     this.levelHeight = options.levelHeight || 64;       // Vertical distance between levels
     this.nodeMarginX = options.nodeMarginX || 28;       // Horizontal spacing between sibling subtrees
     this.alignLeaves = options.alignLeaves !== undefined ? options.alignLeaves : true; // Align all terminal words at bottom
