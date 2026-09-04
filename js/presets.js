@@ -88,22 +88,12 @@ export const PRESETS = [
   {
     id: 'triangle-roof',
     title: '三角形省略 (Triangle / Roof)',
-    description: '内部構造を展開せず句として一括表記する記法（[^ ...]）',
-    code: `[TP 
-  [DP 
-    [^ the hungry cat]
-  ] 
+    description: '内部構造を展開せず句として一括表記する記法（[^ ...] または [^XP ...]）',
+    code: `[S 
+  [NP This] 
   [VP 
-    [V caught] 
-    [DP 
-      [^ a very clever mouse]
-    ] 
-    [PP 
-      [P in] 
-      [DP 
-        [^ the old wooden barn]
-      ]
-    ]
+    [V is] 
+    [^NP a wug]
   ]
 ]`
   },
