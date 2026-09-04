@@ -1,39 +1,52 @@
 /**
  * Syntax Tree Editor - Layout Engine
  * Calculates geometric coordinates (x, y) for every tree node
- * using an adapted tidy-tree algorithm with linguistic conventions
- * (fixed or dynamic level heights, triangle roof bounds, feature annotations).
+ * using contour-based bottom-up subtree layout with exact text widths
+ * (including full support for CJK/Japanese characters, triangles, and subscripts).
  */
 
 export class TreeLayout {
   constructor(options = {}) {
     this.fontSize = options.fontSize || 16;
-    this.fontFamily = options.fontFamily || 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    this.fontFamily = options.fontFamily || 'Inter, -apple-system, BlinkMacSystemFont, "Noto Sans JP", "Hiragino Sans", sans-serif';
     this.levelHeight = options.levelHeight || 64;       // Vertical distance between levels
-    this.nodeMarginX = options.nodeMarginX || 28;       // Horizontal spacing between sibling nodes
-    this.leafMarginX = options.leafMarginX || 24;       // Spacing between leaf nodes
+    this.nodeMarginX = options.nodeMarginX || 28;       // Horizontal spacing between sibling subtrees
     this.canvas = null;
     this.ctx = null;
   }
 
   /**
-   * Helper to measure text width via canvas
+   * Accurate text measurement with Canvas and CJK character support
    */
   measureText(text, fontSize = this.fontSize, isBold = false) {
+    if (!text) return 0;
+
     if (typeof document !== 'undefined') {
       if (!this.canvas) {
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d');
       }
       this.ctx.font = `${isBold ? '600' : '400'} ${fontSize}px ${this.fontFamily}`;
-      return this.ctx.measureText(text).width;
+      const measured = this.ctx.measureText(text).width;
+      if (measured > 0) return measured;
     }
-    // Fallback if no DOM (node.js / headless)
-    return text.length * fontSize * 0.62;
+
+    // Fallback: distinguish CJK full-width vs ASCII
+    let width = 0;
+    for (let i = 0; i < text.length; i++) {
+      const code = text.charCodeAt(i);
+      // CJK Unified Ideographs, Hiragana, Katakana, Fullwidth forms
+      if ((code >= 0x3000 && code <= 0x9FFF) || (code >= 0xFF00 && code <= 0xFFEF)) {
+        width += fontSize * 1.05;
+      } else {
+        width += fontSize * 0.62;
+      }
+    }
+    return width;
   }
 
   /**
-   * Main entry point: takes a TreeNode and returns a LayoutNode with x, y coordinates
+   * Main entry point: takes a TreeNode and returns layout with absolute x, y coordinates
    */
   compute(root) {
     if (!root) return null;
@@ -41,10 +54,13 @@ export class TreeLayout {
     // Step 1: Pre-calculate node dimensions (width, height)
     this.measureSubtree(root, 0);
 
-    // Step 2: Post-order bottom-up initial layout
+    // Step 2: Bottom-up contour layout (relative x positioning)
     this.layoutSubtree(root);
 
-    // Step 3: Shift all nodes so min X is padded nicely
+    // Step 3: Convert relative coordinates to absolute coordinates
+    this.assignAbsoluteCoordinates(root, 0);
+
+    // Step 4: Calculate bounding box and apply padding
     let minX = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
@@ -84,33 +100,31 @@ export class TreeLayout {
 
     return {
       root,
-      width: (maxX - minX) + paddingX * 2,
-      height: maxY + paddingY * 2
+      width: Math.ceil((maxX - minX) + paddingX * 2),
+      height: Math.ceil(maxY + paddingY * 2)
     };
   }
 
   /**
-   * Measures each node's text and sets width/height and level depth
+   * Measure each node's visual width and height
    */
   measureSubtree(node, depth) {
     node.depth = depth;
     node.y = depth * this.levelHeight;
 
-    // Calculate display width
-    let textWidth = this.measureText(node.displayLabel || node.label || ' ', this.fontSize, !node.isLeaf);
+    const labelStr = node.displayLabel || node.label || ' ';
+    let textWidth = this.measureText(labelStr, this.fontSize, !node.isLeaf);
 
-    // If there is subscript
     if (node.subscript) {
-      textWidth += this.measureText(node.subscript, this.fontSize * 0.75, false) + 2;
+      textWidth += this.measureText(node.subscript, this.fontSize * 0.75, false) + 4;
     }
 
-    // If there are syntactic features [+wh]
     if (node.features && node.features.length > 0) {
       const featStr = `[${node.features.join(',')}]`;
-      textWidth += this.measureText(featStr, this.fontSize * 0.75, false) + 4;
+      textWidth += this.measureText(featStr, this.fontSize * 0.75, false) + 6;
     }
 
-    node.width = Math.max(textWidth + 14, 30);
+    node.width = Math.max(textWidth + 16, 32);
     node.height = this.fontSize + 12;
 
     if (node.children && node.children.length > 0) {
@@ -121,7 +135,31 @@ export class TreeLayout {
   }
 
   /**
-   * Post-order layout: computes relative x positions, avoiding sibling subtree overlap
+   * Get contour of a subtree (relative to its own root origin x=0)
+   * isLeft = true: leftmost edge at each relative depth
+   * isLeft = false: rightmost edge at each relative depth
+   */
+  getContour(node, isLeft) {
+    const contour = [];
+    const traverse = (n, depth, currentX) => {
+      const edge = isLeft ? (currentX - n.width / 2) : (currentX + n.width / 2);
+      if (contour[depth] === undefined) {
+        contour[depth] = edge;
+      } else {
+        contour[depth] = isLeft ? Math.min(contour[depth], edge) : Math.max(contour[depth], edge);
+      }
+      if (n.children && n.children.length > 0) {
+        for (const c of n.children) {
+          traverse(c, depth + 1, currentX + c.x);
+        }
+      }
+    };
+    traverse(node, 0, 0);
+    return contour;
+  }
+
+  /**
+   * Bottom-up layout using contour-based subtree separation
    */
   layoutSubtree(node) {
     if (!node.children || node.children.length === 0) {
@@ -129,89 +167,55 @@ export class TreeLayout {
       return;
     }
 
-    // Recursively layout all children first
+    // Layout all children first
     for (const child of node.children) {
       this.layoutSubtree(child);
     }
 
-    // Position children relative to each other from left to right
-    let currentX = 0;
-    for (let i = 0; i < node.children.length; i++) {
-      const child = node.children[i];
-      if (i === 0) {
-        child.x = 0;
-      } else {
-        const prevChild = node.children[i - 1];
-        // Calculate minimum distance needed between prevChild subtree and current child subtree
-        const dist = this.getSubtreeSeparation(prevChild, child);
-        currentX += dist;
-        this.shiftSubtree(child, currentX - child.x);
+    // Position children relative to each other so their contours do not overlap
+    node.children[0].x = 0;
+
+    for (let i = 1; i < node.children.length; i++) {
+      const leftChild = node.children[i - 1];
+      const rightChild = node.children[i];
+
+      const rightContour = this.getContour(leftChild, false);
+      const leftContour = this.getContour(rightChild, true);
+
+      let maxRequiredSeparation = this.nodeMarginX;
+      const maxDepth = Math.min(rightContour.length, leftContour.length);
+
+      for (let d = 0; d < maxDepth; d++) {
+        const req = rightContour[d] - leftContour[d] + this.nodeMarginX;
+        if (req > maxRequiredSeparation) {
+          maxRequiredSeparation = req;
+        }
       }
+
+      // Position rightChild relative to leftChild
+      rightChild.x = leftChild.x + maxRequiredSeparation;
     }
 
-    // Parent node sits centered above its children
+    // Center children around parent (x=0)
     const firstChild = node.children[0];
     const lastChild = node.children[node.children.length - 1];
-    node.x = (firstChild.x + lastChild.x) / 2;
+    const midPoint = (firstChild.x + lastChild.x) / 2;
+
+    for (const child of node.children) {
+      child.x -= midPoint;
+    }
+    node.x = 0;
   }
 
   /**
-   * Shift an entire subtree horizontally by dx
+   * Convert parent-relative x offsets into global x coordinates
    */
-  shiftSubtree(node, dx) {
-    node.x += dx;
-    if (node.children) {
+  assignAbsoluteCoordinates(node, parentAbsX) {
+    node.x = parentAbsX + node.x;
+    if (node.children && node.children.length > 0) {
       for (const child of node.children) {
-        this.shiftSubtree(child, dx);
+        this.assignAbsoluteCoordinates(child, node.x);
       }
     }
-  }
-
-  /**
-   * Calculate minimum horizontal distance to prevent subtree collisions
-   */
-  getSubtreeSeparation(leftSubtree, rightSubtree) {
-    const leftContours = [];
-    const rightContours = [];
-
-    const getRightContour = (node, depth = 0) => {
-      const rightEdge = node.x + node.width / 2;
-      if (leftContours[depth] === undefined || rightEdge > leftContours[depth]) {
-        leftContours[depth] = rightEdge;
-      }
-      if (node.children) {
-        for (const child of node.children) {
-          getRightContour(child, depth + 1);
-        }
-      }
-    };
-
-    const getLeftContour = (node, depth = 0) => {
-      const leftEdge = node.x - node.width / 2;
-      if (rightContours[depth] === undefined || leftEdge < rightContours[depth]) {
-        rightContours[depth] = leftEdge;
-      }
-      if (node.children) {
-        for (const child of node.children) {
-          getLeftContour(child, depth + 1);
-        }
-      }
-    };
-
-    getRightContour(leftSubtree);
-    getLeftContour(rightSubtree);
-
-    let maxOverlap = 0;
-    const minSeparation = this.nodeMarginX;
-    const maxDepth = Math.min(leftContours.length, rightContours.length);
-
-    for (let d = 0; d < maxDepth; d++) {
-      const overlap = leftContours[d] + minSeparation - rightContours[d];
-      if (overlap > maxOverlap) {
-        maxOverlap = overlap;
-      }
-    }
-
-    return Math.max(maxOverlap, minSeparation);
   }
 }

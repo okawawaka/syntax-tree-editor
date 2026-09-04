@@ -69,30 +69,21 @@ header.app-header {
   gap: 12px;
 }
 
-.brand-mark {
-  width: 24px;
-  height: 24px;
-  background-color: var(--swiss-red);
-  position: relative;
+.brand-logo {
+  width: 32px;
+  height: 32px;
+  background-color: var(--ink-900);
+  color: var(--pure-white);
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease;
 }
 
-.brand-mark::before {
-  content: "";
-  position: absolute;
-  width: 12px;
-  height: 3.5px;
-  background-color: var(--pure-white);
-}
-
-.brand-mark::after {
-  content: "";
-  position: absolute;
-  width: 3.5px;
-  height: 12px;
-  background-color: var(--pure-white);
+.brand-logo:hover {
+  background-color: var(--swiss-red);
 }
 
 .brand-title {
