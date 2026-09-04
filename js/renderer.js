@@ -7,7 +7,7 @@
 export class TreeRenderer {
   constructor(options = {}) {
     this.branchType = options.branchType || 'straight'; // 'straight' or 'curved'
-    this.fontFamily = options.fontFamily || 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    this.fontFamily = options.fontFamily || 'Inter, -apple-system, BlinkMacSystemFont, "Noto Sans JP", "Hiragino Sans", sans-serif';
     this.fontSize = options.fontSize || 16;
     this.strokeColor = options.strokeColor || '#111111';
     this.arrowColor = options.arrowColor || '#E30613'; // Swiss Red
@@ -259,9 +259,11 @@ export class TreeRenderer {
 
   /**
    * Render curved movement arrows with Swiss arrowheads and indices
+   * Uses cubic bezier curves traversing strictly UNDER all intervening nodes
    */
   renderMovements(movements, nodeMap) {
     let out = '';
+    const allNodes = Array.from(nodeMap.values());
 
     for (const mov of movements) {
       const sourceNode = typeof mov.source === 'string' ? nodeMap.get(mov.source) : mov.source;
@@ -269,20 +271,30 @@ export class TreeRenderer {
 
       if (!sourceNode || !targetNode) continue;
 
-      // Calculate path: typically from source (bottom-ish) to target (landing site)
-      // Usually curved below or looping
       const sx = sourceNode.x;
-      const sy = sourceNode.y + sourceNode.height / 2 + 4;
+      const sy = sourceNode.y + sourceNode.height / 2 + 3;
       const tx = targetNode.x;
-      const ty = targetNode.y + targetNode.height / 2 + 4;
+      const ty = targetNode.y + targetNode.height / 2 + 3;
 
-      // Arc dip: deeper if distance is greater
-      const dx = tx - sx;
-      const dist = Math.abs(dx);
-      const dipY = Math.max(sy, ty) + Math.min(dist * 0.25 + 24, 80);
+      const minX = Math.min(sx, tx) - 10;
+      const maxX = Math.max(sx, tx) + 10;
 
-      // Control points for smooth bezier curve under the tree
-      const pathD = `M ${sx} ${sy} Q ${(sx + tx) / 2} ${dipY}, ${tx} ${ty}`;
+      // Find the maximum bottom Y of any node situated horizontally between source and target
+      let maxInterveningY = Math.max(sy, ty);
+      for (const node of allNodes) {
+        if (node.x >= minX && node.x <= maxX) {
+          const nodeBottom = node.y + node.height / 2;
+          if (nodeBottom > maxInterveningY) {
+            maxInterveningY = nodeBottom;
+          }
+        }
+      }
+
+      // Dip comfortably below the lowest intervening node
+      const dipY = maxInterveningY + 34;
+
+      // Cubic Bezier curve: drops down from source, sweeps under bottom, rises to target
+      const pathD = `M ${sx} ${sy} C ${sx} ${dipY}, ${tx} ${dipY}, ${tx} ${ty}`;
 
       out += `
         <path 
@@ -296,10 +308,10 @@ export class TreeRenderer {
         />
       `;
 
-      // Movement tag text
+      // Movement tag text positioned along bottom trough
       if (mov.label) {
         const midX = (sx + tx) / 2;
-        const midY = (dipY + Math.max(sy, ty)) / 2 + 10;
+        const midY = dipY + 12;
         out += `
           <text 
             x="${midX}" 

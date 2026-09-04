@@ -32,6 +32,16 @@ class SyntaxTreeApp {
     this.ui = new UIController(this);
 
     this.init();
+
+    // Automatic layout recalculation when Web Fonts (Inter / Noto Sans JP) finish loading
+    if (typeof document !== 'undefined' && document.fonts) {
+      document.fonts.ready.then(() => {
+        this.layoutAndRender();
+      });
+      document.fonts.addEventListener('loadingdone', () => {
+        this.layoutAndRender();
+      });
+    }
   }
 
   init() {
@@ -40,7 +50,7 @@ class SyntaxTreeApp {
     this.setupExportListeners();
     this.setupSettingListeners();
 
-    // Load initial tree from URL hash or localStorage or default preset
+    // Load initial tree from URL hash or localStorage or default preset (Basic SVO)
     const savedTree = this.loadInitialContent();
     const editor = document.getElementById('bracket-editor');
     editor.value = savedTree;
@@ -66,20 +76,23 @@ class SyntaxTreeApp {
       return saved;
     }
 
-    // 3. Default preset (Wh-Movement to showcase rich features)
-    return PRESETS[2].code;
+    // 3. Default preset: Basic SVO
+    return PRESETS[0].code;
   }
 
   populatePresets() {
     const select = document.getElementById('preset-select');
     if (!select) return;
 
+    select.innerHTML = '';
     PRESETS.forEach((p, idx) => {
       const opt = document.createElement('option');
       opt.value = idx;
       opt.textContent = p.title;
       select.appendChild(opt);
     });
+
+    select.value = '0';
 
     select.addEventListener('change', (e) => {
       const idx = parseInt(e.target.value, 10);
@@ -134,6 +147,16 @@ class SyntaxTreeApp {
         this.render();
       });
     });
+
+    // Leaf bottom-alignment toggle (Align all terminal words to same horizontal baseline)
+    const alignLeavesToggle = document.getElementById('toggle-align-leaves');
+    if (alignLeavesToggle) {
+      alignLeavesToggle.addEventListener('change', (e) => {
+        this.layout.alignLeaves = e.target.checked;
+        this.layoutAndRender();
+        this.ui.showToast(e.target.checked ? '単語を最下段に整列しました' : '階層に応じた配置に戻しました');
+      });
+    }
 
     // Leaf font style italic toggle
     const italicToggle = document.getElementById('toggle-leaf-italic');
@@ -289,7 +312,7 @@ class SyntaxTreeApp {
 
     // Deep clone tree for layout calculations
     const treeCopy = this.currentTree.clone();
-    this.layoutData = this.layout.compute(treeCopy);
+    this.layoutData = this.layout.compute(treeCopy, this.currentMovements);
     this.render();
   }
 

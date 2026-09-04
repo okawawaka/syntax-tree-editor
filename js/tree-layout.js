@@ -2,7 +2,8 @@
  * Syntax Tree Editor - Layout Engine
  * Calculates geometric coordinates (x, y) for every tree node
  * using contour-based bottom-up subtree layout with exact text widths
- * (including full support for CJK/Japanese characters, triangles, and subscripts).
+ * (including full support for CJK/Japanese characters, leaf bottom-alignment,
+ * triangles, and subscripts).
  */
 
 export class TreeLayout {
@@ -11,6 +12,7 @@ export class TreeLayout {
     this.fontFamily = options.fontFamily || 'Inter, -apple-system, BlinkMacSystemFont, "Noto Sans JP", "Hiragino Sans", sans-serif';
     this.levelHeight = options.levelHeight || 64;       // Vertical distance between levels
     this.nodeMarginX = options.nodeMarginX || 28;       // Horizontal spacing between sibling subtrees
+    this.alignLeaves = options.alignLeaves !== undefined ? options.alignLeaves : true; // Align all terminal words at bottom
     this.canvas = null;
     this.ctx = null;
   }
@@ -48,11 +50,23 @@ export class TreeLayout {
   /**
    * Main entry point: takes a TreeNode and returns layout with absolute x, y coordinates
    */
-  compute(root) {
+  compute(root, movements = []) {
     if (!root) return null;
 
-    // Step 1: Pre-calculate node dimensions (width, height)
-    this.measureSubtree(root, 0);
+    // Step 1: Pre-calculate node dimensions (width, height) and initial depths
+    let maxDepth = 0;
+    const findMaxDepth = (node, depth) => {
+      node.depth = depth;
+      if (depth > maxDepth) maxDepth = depth;
+      if (node.children && node.children.length > 0) {
+        for (const child of node.children) {
+          findMaxDepth(child, depth + 1);
+        }
+      }
+    };
+    findMaxDepth(root, 0);
+
+    this.measureSubtree(root, 0, maxDepth);
 
     // Step 2: Bottom-up contour layout (relative x positioning)
     this.layoutSubtree(root);
@@ -70,7 +84,8 @@ export class TreeLayout {
       const right = node.x + node.width / 2;
       if (left < minX) minX = left;
       if (right > maxX) maxX = right;
-      if (node.y + node.height > maxY) maxY = node.y + node.height;
+      const bottom = node.y + node.height;
+      if (bottom > maxY) maxY = bottom;
 
       if (node.children) {
         for (const child of node.children) {
@@ -80,6 +95,9 @@ export class TreeLayout {
     };
 
     findExtents(root);
+
+    // Extra bottom padding if there are movement arrows to prevent SVG clipping
+    const arrowBottomPadding = (movements && movements.length > 0) ? 55 : 0;
 
     const paddingX = 40;
     const paddingY = 40;
@@ -101,16 +119,26 @@ export class TreeLayout {
     return {
       root,
       width: Math.ceil((maxX - minX) + paddingX * 2),
-      height: Math.ceil(maxY + paddingY * 2)
+      height: Math.ceil(maxY + paddingY * 2 + arrowBottomPadding),
+      maxDepth,
+      maxY: maxY + shiftY
     };
   }
 
   /**
-   * Measure each node's visual width and height
+   * Measure each node's visual width and height and set Y coordinate
    */
-  measureSubtree(node, depth) {
+  measureSubtree(node, depth, maxDepth) {
     node.depth = depth;
-    node.y = depth * this.levelHeight;
+
+    // Y position calculation:
+    // If alignLeaves is enabled and this node is a terminal leaf (or triangle child),
+    // align it to the maximum depth of the entire tree!
+    if (this.alignLeaves && (!node.children || node.children.length === 0)) {
+      node.y = maxDepth * this.levelHeight;
+    } else {
+      node.y = depth * this.levelHeight;
+    }
 
     const labelStr = node.displayLabel || node.label || ' ';
     let textWidth = this.measureText(labelStr, this.fontSize, !node.isLeaf);
@@ -129,32 +157,31 @@ export class TreeLayout {
 
     if (node.children && node.children.length > 0) {
       for (const child of node.children) {
-        this.measureSubtree(child, depth + 1);
+        this.measureSubtree(child, depth + 1, maxDepth);
       }
     }
   }
 
   /**
    * Get contour of a subtree (relative to its own root origin x=0)
-   * isLeft = true: leftmost edge at each relative depth
-   * isLeft = false: rightmost edge at each relative depth
    */
   getContour(node, isLeft) {
     const contour = [];
-    const traverse = (n, depth, currentX) => {
+    const traverse = (n, currentX) => {
       const edge = isLeft ? (currentX - n.width / 2) : (currentX + n.width / 2);
-      if (contour[depth] === undefined) {
-        contour[depth] = edge;
+      const d = n.depth;
+      if (contour[d] === undefined) {
+        contour[d] = edge;
       } else {
-        contour[depth] = isLeft ? Math.min(contour[depth], edge) : Math.max(contour[depth], edge);
+        contour[d] = isLeft ? Math.min(contour[d], edge) : Math.max(contour[d], edge);
       }
       if (n.children && n.children.length > 0) {
         for (const c of n.children) {
-          traverse(c, depth + 1, currentX + c.x);
+          traverse(c, currentX + c.x);
         }
       }
     };
-    traverse(node, 0, 0);
+    traverse(node, 0);
     return contour;
   }
 
@@ -183,12 +210,14 @@ export class TreeLayout {
       const leftContour = this.getContour(rightChild, true);
 
       let maxRequiredSeparation = this.nodeMarginX;
-      const maxDepth = Math.min(rightContour.length, leftContour.length);
+      const maxDepth = Math.max(rightContour.length, leftContour.length);
 
       for (let d = 0; d < maxDepth; d++) {
-        const req = rightContour[d] - leftContour[d] + this.nodeMarginX;
-        if (req > maxRequiredSeparation) {
-          maxRequiredSeparation = req;
+        if (rightContour[d] !== undefined && leftContour[d] !== undefined) {
+          const req = rightContour[d] - leftContour[d] + this.nodeMarginX;
+          if (req > maxRequiredSeparation) {
+            maxRequiredSeparation = req;
+          }
         }
       }
 
