@@ -69,7 +69,7 @@ export class TreeLayout {
     this.measureSubtree(root, 0, maxDepth);
 
     // Step 2: Bottom-up contour layout (relative x positioning)
-    this.layoutSubtree(root);
+    this.layoutSubtree(root, maxDepth);
 
     // Step 3: Convert relative coordinates to absolute coordinates
     this.assignAbsoluteCoordinates(root, 0);
@@ -164,17 +164,33 @@ export class TreeLayout {
 
   /**
    * Get contour of a subtree (relative to its own root origin x=0)
+   * Accounts for leaf nodes aligned to maxDepth
    */
-  getContour(node, isLeft) {
+  getContour(node, isLeft, maxDepth) {
     const contour = [];
     const traverse = (n, currentX) => {
       const edge = isLeft ? (currentX - n.width / 2) : (currentX + n.width / 2);
-      const d = n.depth;
-      if (contour[d] === undefined) {
-        contour[d] = edge;
+      const isLeaf = (!n.children || n.children.length === 0);
+      const visualDepth = (this.alignLeaves && isLeaf) ? maxDepth : n.depth;
+
+      // Record edge at the node's visual vertical position
+      if (contour[visualDepth] === undefined) {
+        contour[visualDepth] = edge;
       } else {
-        contour[d] = isLeft ? Math.min(contour[d], edge) : Math.max(contour[d], edge);
+        contour[visualDepth] = isLeft ? Math.min(contour[visualDepth], edge) : Math.max(contour[visualDepth], edge);
       }
+
+      // If leaf is dropped down to maxDepth, it also occupies all vertical levels from n.depth to maxDepth!
+      if (this.alignLeaves && isLeaf && n.depth < maxDepth) {
+        for (let d = n.depth; d < maxDepth; d++) {
+          if (contour[d] === undefined) {
+            contour[d] = edge;
+          } else {
+            contour[d] = isLeft ? Math.min(contour[d], edge) : Math.max(contour[d], edge);
+          }
+        }
+      }
+
       if (n.children && n.children.length > 0) {
         for (const c of n.children) {
           traverse(c, currentX + c.x);
@@ -188,7 +204,7 @@ export class TreeLayout {
   /**
    * Bottom-up layout using contour-based subtree separation
    */
-  layoutSubtree(node) {
+  layoutSubtree(node, maxDepth) {
     if (!node.children || node.children.length === 0) {
       node.x = 0;
       return;
@@ -196,7 +212,7 @@ export class TreeLayout {
 
     // Layout all children first
     for (const child of node.children) {
-      this.layoutSubtree(child);
+      this.layoutSubtree(child, maxDepth);
     }
 
     // Position children relative to each other so their contours do not overlap
@@ -206,13 +222,13 @@ export class TreeLayout {
       const leftChild = node.children[i - 1];
       const rightChild = node.children[i];
 
-      const rightContour = this.getContour(leftChild, false);
-      const leftContour = this.getContour(rightChild, true);
+      const rightContour = this.getContour(leftChild, false, maxDepth);
+      const leftContour = this.getContour(rightChild, true, maxDepth);
 
       let maxRequiredSeparation = this.nodeMarginX;
-      const maxDepth = Math.max(rightContour.length, leftContour.length);
+      const mDepth = Math.max(rightContour.length, leftContour.length);
 
-      for (let d = 0; d < maxDepth; d++) {
+      for (let d = 0; d < mDepth; d++) {
         if (rightContour[d] !== undefined && leftContour[d] !== undefined) {
           const req = rightContour[d] - leftContour[d] + this.nodeMarginX;
           if (req > maxRequiredSeparation) {

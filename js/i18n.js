@@ -21,10 +21,10 @@ window.SYNTAX_I18N = {
     btnExportLatex: "エクスポート",
     btnExportLatexTitle: "LaTeX / Mermaid / JSON / テキスト出力",
     grammarModeLabel: "体系:",
-    grammarPedagogical: "簡易 (S/NP)",
-    grammarPedagogicalTitle: "入門・初級向け S / NP 体系",
-    grammarAcademic: "学術 (TP/DP)",
-    grammarAcademicTitle: "生成文法・研究向け TP / DP / vP 体系",
+    grammarPedagogical: "S / NP",
+    grammarPedagogicalTitle: "S / NP 体系",
+    grammarAcademic: "TP / DP",
+    grammarAcademicTitle: "TP / DP 体系",
 
     // 左パネル: ヘッダー
     helpBtn: "操作説明 [ ? ]",
@@ -76,11 +76,15 @@ window.SYNTAX_I18N = {
     toastCopyImage: "画像をクリップボードにコピーしました",
     toastCopyCode: "コードをクリップボードにコピーしました",
     toastCopyUrl: "共有用URLをクリップボードにコピーしました",
+    toastUndo: "元に戻しました (Undo)",
+    toastRedo: "やり直しました (Redo)",
     toastErrorEmpty: "構文木が空です",
 
     // 操作説明モーダル
     helpModalTitle: "操作説明 (User Guide)",
     helpSecShortcuts: "ショートカットキー",
+    helpShortcutUndo: "元に戻す (Undo)",
+    helpShortcutRedo: "やり直す (Redo)",
     helpShortcut1: "操作説明画面の開閉",
     helpShortcut2: "モーダル画面を閉じる / ノード選択の解除",
     helpShortcut3: "キャンバス上で選択中のノードを削除",
@@ -147,10 +151,10 @@ window.SYNTAX_I18N = {
     btnExportLatex: "EXPORT",
     btnExportLatexTitle: "Export LaTeX, Mermaid, JSON, and Text",
     grammarModeLabel: "THEORY:",
-    grammarPedagogical: "Basic (S/NP)",
-    grammarPedagogicalTitle: "Pedagogical S / NP framework",
-    grammarAcademic: "Academic (TP/DP)",
-    grammarAcademicTitle: "Generative TP / DP / vP framework",
+    grammarPedagogical: "S / NP",
+    grammarPedagogicalTitle: "S / NP framework",
+    grammarAcademic: "TP / DP",
+    grammarAcademicTitle: "TP / DP framework",
 
     // Left Panel: Header
     helpBtn: "HELP [ ? ]",
@@ -202,11 +206,15 @@ window.SYNTAX_I18N = {
     toastCopyImage: "Image copied to clipboard",
     toastCopyCode: "Code copied to clipboard",
     toastCopyUrl: "Share URL copied to clipboard",
+    toastUndo: "Undo",
+    toastRedo: "Redo",
     toastErrorEmpty: "Syntax tree is empty",
 
     // Help Modal
     helpModalTitle: "User Guide",
     helpSecShortcuts: "Keyboard Shortcuts",
+    helpShortcutUndo: "Undo changes",
+    helpShortcutRedo: "Redo changes",
     helpShortcut1: "Open / Close Help modal",
     helpShortcut2: "Close modal / Deselect node",
     helpShortcut3: "Delete selected node on canvas",

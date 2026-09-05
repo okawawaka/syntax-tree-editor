@@ -18,6 +18,9 @@ class SyntaxTreeApp {
     this.layoutData = null;
     this.isSyncing = false;
     this.grammarMode = 'pedagogical';
+    this.undoStack = [];
+    this.redoStack = [];
+    this.debounceTimer = null;
 
     this.layout = new TreeLayout({
       fontSize: 16,
@@ -53,11 +56,7 @@ class SyntaxTreeApp {
 
   init() {
     if (window.i18n) window.i18n.init();
-    try {
-      this.grammarMode = localStorage.getItem('syntax_tree_editor_grammar_mode') || 'pedagogical';
-    } catch (e) {
-      this.grammarMode = 'pedagogical';
-    }
+    this.grammarMode = 'pedagogical';
     this.setupGrammarModeListeners();
     window.addEventListener('languagechange', () => {
       this.populatePresets();
@@ -77,6 +76,9 @@ class SyntaxTreeApp {
     if (this.editorIndented) this.editorIndented.value = indented;
     if (this.editorFlat) this.editorFlat.value = flat;
 
+    this.undoStack = [indented];
+    this.redoStack = [];
+
     this.parseAndRender(indented);
     this.syncPresetSelect(initialCode);
     if (tree) this.updateSentence(tree);
@@ -87,6 +89,80 @@ class SyntaxTreeApp {
         history.replaceState(null, '', window.location.pathname + window.location.search);
       } catch (e) {}
     }
+  }
+
+  pushHistory(code) {
+    if (!code) return;
+    const top = this.undoStack[this.undoStack.length - 1];
+    if (top === code) return;
+    this.undoStack.push(code);
+    if (this.undoStack.length > 50) {
+      this.undoStack.shift();
+    }
+    this.redoStack = [];
+  }
+
+  undo() {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+
+    const currentEditorVal = (this.activeEditor || this.editorIndented)?.value;
+    const top = this.undoStack[this.undoStack.length - 1];
+    if (currentEditorVal && currentEditorVal !== top) {
+      this.undoStack.push(currentEditorVal);
+    }
+
+    if (this.undoStack.length <= 1) {
+      const isEn = window.i18n && window.i18n.currentLang === 'en';
+      this.ui.showToast(isEn ? 'Nothing to undo' : 'これ以上元に戻せません');
+      return;
+    }
+
+    const current = this.undoStack.pop();
+    this.redoStack.push(current);
+    const target = this.undoStack[this.undoStack.length - 1];
+    this.applyCode(target);
+
+    const isEn = window.i18n && window.i18n.currentLang === 'en';
+    this.ui.showToast(isEn ? 'Undo' : '元に戻しました');
+  }
+
+  redo() {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+
+    if (this.redoStack.length === 0) {
+      const isEn = window.i18n && window.i18n.currentLang === 'en';
+      this.ui.showToast(isEn ? 'Nothing to redo' : 'やり直す操作はありません');
+      return;
+    }
+
+    const target = this.redoStack.pop();
+    this.undoStack.push(target);
+    this.applyCode(target);
+
+    const isEn = window.i18n && window.i18n.currentLang === 'en';
+    this.ui.showToast(isEn ? 'Redo' : 'やり直しました');
+  }
+
+  applyCode(code) {
+    this.isSyncing = true;
+    const { tree } = TreeParser.parse(code);
+    const indented = tree ? TreeParser.stringify(tree, true) : code;
+    const flat = tree ? TreeParser.stringify(tree, false) : code;
+
+    if (this.editorIndented) this.editorIndented.value = indented;
+    if (this.editorFlat) this.editorFlat.value = flat;
+    this.isSyncing = false;
+
+    this.parseAndRender(code);
+    this.syncPresetSelect(code);
+    if (tree) this.updateSentence(tree);
+    this.saveState(code);
   }
 
   loadInitialContent() {
@@ -189,6 +265,7 @@ class SyntaxTreeApp {
         if (this.editorFlat) this.editorFlat.value = flat;
         this.isSyncing = false;
 
+        this.pushHistory(indented);
         this.parseAndRender(indented);
         if (tree) this.updateSentence(tree);
         this.ui.resetView();
@@ -239,6 +316,7 @@ class SyntaxTreeApp {
         if (this.editorFlat) this.editorFlat.value = flat;
         this.isSyncing = false;
 
+        this.pushHistory(indented);
         this.parseAndRender(indented);
         if (tree) this.updateSentence(tree);
         this.ui.resetView();
@@ -255,7 +333,8 @@ class SyntaxTreeApp {
     if (!select) return;
 
     const trimmed = (currentCode || '').trim().replace(/\s+/g, ' ');
-    const matchedIdx = PRESETS.findIndex(p => p.code.trim().replace(/\s+/g, ' ') === trimmed);
+    const currentList = this.getCurrentPresets();
+    const matchedIdx = currentList.findIndex(p => p.code.trim().replace(/\s+/g, ' ') === trimmed);
 
     if (matchedIdx !== -1) {
       select.value = String(matchedIdx);
@@ -263,8 +342,6 @@ class SyntaxTreeApp {
   }
 
   setupEditorListeners() {
-    let debounceTimer = null;
-
     // Track active editor
     this.editorIndented?.addEventListener('focus', () => {
       this.activeEditor = this.editorIndented;
@@ -273,15 +350,34 @@ class SyntaxTreeApp {
       this.activeEditor = this.editorFlat;
     });
 
+    // Global keyboard shortcut for Undo (Ctrl+Z / Cmd+Z) and Redo (Ctrl+Y / Ctrl+Shift+Z / Cmd+Shift+Z)
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        const key = e.key.toLowerCase();
+        if (key === 'z') {
+          e.preventDefault();
+          if (e.shiftKey) {
+            this.redo();
+          } else {
+            this.undo();
+          }
+        } else if (key === 'y') {
+          e.preventDefault();
+          this.redo();
+        }
+      }
+    });
+
     // Indented text editor input
     this.editorIndented?.addEventListener('input', () => {
       this.activeEditor = this.editorIndented;
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = setTimeout(() => {
         if (this.isSyncing) return;
         const code = this.editorIndented.value;
         this.parseAndRender(code);
         this.syncPresetSelect(code);
+        this.pushHistory(code);
         this.saveState(code);
 
         // Instantly reflect changes in the flat (normal) editor
@@ -291,18 +387,19 @@ class SyntaxTreeApp {
           this.updateSentence(this.currentTree);
           this.isSyncing = false;
         }
-      }, 100);
+      }, 200);
     });
 
     // Normal (Flat 1-line) text editor input
     this.editorFlat?.addEventListener('input', () => {
       this.activeEditor = this.editorFlat;
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = setTimeout(() => {
         if (this.isSyncing) return;
         const code = this.editorFlat.value;
         this.parseAndRender(code);
         this.syncPresetSelect(code);
+        this.pushHistory(code);
         this.saveState(code);
 
         // Instantly reflect changes in the indented editor
@@ -312,7 +409,7 @@ class SyntaxTreeApp {
           this.updateSentence(this.currentTree);
           this.isSyncing = false;
         }
-      }, 100);
+      }, 200);
     });
 
     // Format code button: Formats both indented and flat representations
@@ -323,16 +420,20 @@ class SyntaxTreeApp {
         if (this.editorIndented) this.editorIndented.value = formatted;
         if (this.editorFlat) this.editorFlat.value = flat;
         this.updateSentence(this.currentTree);
+        this.pushHistory(formatted);
         this.saveState(formatted);
-        this.ui.showToast('コードをインデント整形しました');
+        const isEn = window.i18n && window.i18n.currentLang === 'en';
+        this.ui.showToast(isEn ? 'Formatted code' : 'コードをインデント整形しました');
       }
     });
 
     // Clear editor button: Clears both editors
     document.getElementById('btn-clear-bracket')?.addEventListener('click', () => {
-      if (confirm('エディタの内容をクリアしますか？')) {
+      const isEn = window.i18n && window.i18n.currentLang === 'en';
+      if (confirm(isEn ? 'Clear editor content?' : 'エディタの内容をクリアしますか？')) {
         if (this.editorIndented) this.editorIndented.value = '[]';
         if (this.editorFlat) this.editorFlat.value = '[]';
+        this.pushHistory('[]');
         this.parseAndRender('[]');
         if (this.sentenceEl) this.sentenceEl.textContent = '';
         (this.activeEditor || this.editorIndented)?.focus();
@@ -555,6 +656,7 @@ class SyntaxTreeApp {
     this.isSyncing = false;
 
     this.updateSentence(this.currentTree);
+    this.pushHistory(formatted);
     this.saveState(formatted);
     this.layoutAndRender();
   }
