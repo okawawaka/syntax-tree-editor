@@ -1,88 +1,89 @@
-# 言語学 構文木エディタ (Linguistic Syntax Tree Editor)
+# 構文木エディタ (SYNTAX TREE EDITOR)
 
-[![GitHub Pages Deployment](https://github.com/okawawaka/syntax-tree-editor/actions/workflows/deploy.yml/badge.svg)](https://github.com/okawawaka/syntax-tree-editor/actions/workflows/deploy.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+ブラウザ上で統語論・言語学の構文木（Syntax Tree）を作成・編集・エクスポートできるWebアプリケーションです。
 
-現代的で合理的な**スイス・スタイル（International Typographic Style）**による、言語学・統語論（Syntax）・生成文法研究向けの高機能Web構文木エディタです。  
-大学の講義、レポート・卒業論文・学術論文の執筆、スライド作成に最適化されています。
-
-外部ソフトウェアのインストールやビルドは一切不要。ブラウザを開くだけで即座に動作します。
-
-🔗 **公開URL (GitHub Pages)**: [https://okawawaka.github.io/syntax-tree-editor/](https://okawawaka.github.io/syntax-tree-editor/)
+- Webサイト: https://okawawaka.github.io/syntax-tree-editor/
+- リポジトリ: https://github.com/okawawaka/syntax-tree-editor
 
 ---
 
-## 🌟 主な機能と特徴
+## 機能
 
-### 1. 直観的な操作と双方向リアルタイム同期
-- **ブラケット記法（Penn Treebank形式）のリアルタイム描画**:
-  入力中のカッコの対応を即座に解析し、構文木を瞬時にプレビュー。閉じカッコ忘れなどのシンタックスエラーを行番号つきでハイライト。
-- **キャンバス上のダイレクトGUI編集**:
-  木構造のノードをクリックしてラベルを直接編集したり、子ノード追加・兄弟ノード追加・ノード削除をワンクリックで実行可能。
-  GUI上での操作はテキストエリアのブラケット記法へ自動逆同期されます。
+### 入力と描画
+- **ブラケット記法によるリアルタイム描画**: Penn Treebank形式の括弧入力に対応し、入力内容を即座に構文木として描画します。構文エラーがある場合はエラー箇所を表示します。
+- **キャンバス操作**: マウスドラッグによる移動、ホイールまたはボタンによる拡大・縮小に対応しています。
+- **ノード直接編集**: キャンバス上の各ノードをクリックしてラベルや語彙を直接編集できます。
 
-### 2. 言語学特有の高度な表記を完全網羅
-- **三角形省略表記（Triangle / Roof）**:
-  内部構造を展開せず句（phrase）として一括表記する言語学の必須表現（`[^ phrase]`）。
-- **Xバー理論（X-bar Theory）記法**:
-  `X'`, `X''`（プライム）、`X̄`（マクロン付き文字）の入力支援と美しいタイポグラフィ描画。
-- **移動の矢印（Movement Arrows / Transformations）**:
-  Wh移動、主語繰り上がり、受動化、日本語のかき混ぜ（スクランブリング）など、基底位置の痕跡（`t_i`）と着地点を結ぶなめらかな曲線矢印（破線・赤色アクセント・移動ラベル付き）を描画。
-- **下付き添字 & 統語素性**:
-  `DP_1`, `t_i` などの下付き文字や、`[+wh]`, `[-past]` などの素性束の自動フォーマット。
+### 統語論記法のサポート
+- **三角形省略（Roof）**: `[^語彙]` または `[^範疇 語彙]` による内部構造の省略表記に対応しています。
+- **Xバー理論記法**: プライム（`X'`）およびマクロン（`X̄`）の表記に対応しています。
+- **移動矢印**: 同一のインデックス（`@1` 等）または移動ラベル（`:wh` 等）を持つノード間を下部経由のベジェ曲線で自動接続します。
+- **統語素性・下付き添字**: `[+wh]` などの素性束表記や、`_i` などの下付き添字表記に対応しています。
 
-### 3. 多彩で実用的なエクスポート
-- **高解像度 PNG ダウンロード**: 論文やスライドにそのまま貼れるクリアなPNG（2x Retina解像度）。
-- **ベクター SVG ダウンロード**: 拡大しても粗くならない無限解像度ベクターファイル。WordやIllustratorにも対応。
-- **クリップボードへ画像直接コピー**: ワンクリックでクリップボードにPNGをコピーし、WordやGoogle Docsに `Ctrl+V` で即座にペースト。
-- **LaTeX コード自動生成**:
-  - `forest` パッケージコード（現代言語学のデファクトスタンダード）
-  - `tikz-qtree` パッケージコード
-- **URL共有 / 状態の自動保存**:
-  作成した構文木は自動的にブラウザ（LocalStorage）に保存されるほか、共有ボタンでURLハッシュに木構造を含めたリンクを生成・コピー可能。
+### エクスポート
+- **画像コピー**: レンダリングされた構文木をPNG形式でクリップボードにコピーします。
+- **PNG保存**: ラスター画像（PNG）形式でのダウンロードに対応しています。
+- **SVG保存**: ベクター画像（SVG）形式でのダウンロードに対応しています。
+- **LaTeXコード生成**: `forest` パッケージ形式および `tikz-qtree` パッケージ形式のコードを出力します。
+- **URL共有**: 編集中の構文木データを含む共有用URLを生成します。
 
-### 4. スイス・タイポグラフィ（International Typographic Style）
-- 幾何学的で規律あるグリッドシステム。
-- スイス・レッド（`#E30613`）を象徴的なアクセントとし、視認性に優れた墨黒と機能的グレーで構成。
-- 可読性の高いサンセリフ書体（Inter / Helvetica Neue / Noto Sans JP）と等幅フォント。
+### 表示調整
+- 枝の形状切り替え（直線 / 曲線）
+- 単語底辺揃え（Leaf bottom-alignment）の切り替え
+- 語彙項目のイタリック体表示切り替え
+- 文字サイズ、階層の高さ、ノード間隔の数値調整
 
 ---
 
-## 📖 記法リファレンス (Syntax Guide)
+## 記法仕様
 
-| 記法 | 入力例 | 説明 |
+| 記法 | 入力例 | 出力・説明 |
 | :--- | :--- | :--- |
-| **基本ノード** | `[TP [NP [N cat]] [VP [V sat]]]` | 角括弧で階層構造をネスト |
-| **単語直書き** | `[N cat]` | 範疇ノード直下に語彙項目を配置 |
-| **三角形（屋根）** | `[NP [^ the small black cat]]` | 句の内部構造を三角形で省略 |
-| **Xバー プライム** | `[N' [N cat]]` | アポストロフィでプライム記号 |
-| **Xバー マクロン** | `[N̄ [N cat]]` | マクロン付き文字 |
-| **下付き文字** | `[DP_i John]`, `[t_i]` | アンダースコアの後に英数字 |
-| **移動矢印タグ** | `[DP:wh Which book] ... [t:wh]` | 同一の移動ID（`:tag` または `@tag`）で矢印自動接続 |
-| **統語素性** | `[C[+wh] who]` | 角括弧内に素性を指定 |
+| 基本構造 | `[S [NP [D The] [N cat]] [VP [V sat]]]` | 角括弧による階層的ネスト構造 |
+| 単語直書き | `[N cat]` | 範疇ノード直下に語彙項目を配置 |
+| 三角形省略（句） | `[^NP a wug]` | 範疇名（NP）の下に「a wug」の底辺を持つ二等辺三角形を描画 |
+| 三角形省略（語彙） | `[NP [^ a wug]]` | 語彙の直前に `^` を付与して三角形を描画 |
+| Xバー（プライム） | `[N' [N student]]` | アポストロフィ（`'`）による中間投射表記 |
+| Xバー（マクロン） | `[N̄ [N student]]` | マクロン文字による表記 |
+| 下付き添字 | `[t_i]`, `[DP_1]` | アンダースコア（`_`）以降を下付き文字として表示 |
+| 移動矢印（タグ） | `[NP@1 Which book] ... [t@1]` | 同一のタグ（`@1`）を持つノード間を矢印で接続 |
+| 移動矢印（ラベル） | `[NP:wh Which book] ... [NP:wh t_i]` | 同一のラベル（`:wh`）を持つノード間を矢印で接続 |
+| 統語素性 | `[C[+wh] who]` | 角括弧内の素性をラベル右側に表示 |
 
 ---
 
-## 🛠️ プロジェクト構成
+## 操作方法
+
+### ショートカットキー
+- `?` または `Shift` + `/`: 操作説明画面の開閉
+- `Esc`: モーダル画面の閉鎖、ノード選択の解除
+- `Delete` または `Backspace`: キャンバス上で選択中のノードの削除
+
+### プリセット
+上部のドロップダウンメニューから、基本文（SVO）、Xバー理論、Wh移動、三角形省略、埋め込み節、日本語SOV、かき混ぜ（スクランブリング）などの構文を選択して読み込むことができます。
+
+---
+
+## ファイル構成
 
 ```text
 syntax-tree-editor/
-├── index.html                  # メインUI（スイス・スタイル設計）
+├── index.html            # メイン画面HTML
 ├── css/
-│   └── style.css               # グリッド・タイポグラフィCSS
+│   └── style.css         # スタイルシート
 ├── js/
-│   ├── app.js                  # アプリケーション統合コントローラー
-│   ├── parser.js               # ブラケット記法パーサー＆シリアライザー
-│   ├── tree-layout.js          # 最適木配置レイアウトエンジン（幾何学計算）
-│   ├── renderer.js             # SVGレンダラー（枝・ノード・三角形・矢印）
-│   ├── latex-exporter.js       # LaTeX (forest / tikz-qtree) 出力
-│   ├── presets.js              # 言語学例文集プリセット
-│   └── ui-controller.js        # パン/ズーム・GUI編集・モーダル制御
+│   ├── app.js            # アプリケーション初期化・イベント統合
+│   ├── parser.js         # Penn Treebank記法パーサー・シリアライザー
+│   ├── tree-layout.js    # 木構造レイアウト計算
+│   ├── renderer.js       # SVGレンダリングエンジン
+│   ├── presets.js        # 例文プリセット定義
+│   ├── latex-exporter.js # LaTeX (forest / tikz-qtree) 変換
+│   └── ui-controller.js  # パン/ズーム・操作UIコントローラー
 ├── assets/
-│   └── favicon.svg             # スイス・スタイルSVGファビコン
+│   └── favicon.svg       # ファビコン
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml          # GitHub Pages 自動デプロイ
+│       └── deploy.yml    # GitHub Pages自動デプロイワークフロー
 ├── README.md
 ├── LICENSE
 └── .gitignore
@@ -90,41 +91,17 @@ syntax-tree-editor/
 
 ---
 
-## 🚀 GitHub Pagesでの公開手順
+## 実行環境
 
-1. 本リポジトリの変更をコミットし、リモートへプッシュします：
-   ```bash
-   git add .
-   git commit -m "feat: Initial release of Syntax Tree Editor"
-   git push -u origin main
-   ```
+外部依存パッケージやビルドツールは不要です。ブラウザで直接 `index.html` を開くか、ローカルHTTPサーバーで実行できます。
 
-2. GitHubのリポジトリページを開きます：  
-   `https://github.com/okawawaka/syntax-tree-editor`
-
-3. **Settings** タブ > 左メニューの **Pages** を開きます。
-4. **Build and deployment** の **Source** 設定で：
-   - **GitHub Actions** を選択（同梱の `.github/workflows/deploy.yml` により自動デプロイされます）  
-   *または*
-   - **Deploy from a branch** を選択し、Branch: `main` / Folder: `/ (root)` を指定して **Save**。
-5. 数十秒でデプロイが完了し、`https://okawawaka.github.io/syntax-tree-editor/` でWebアプリが公開されます。
+```bash
+# Pythonを使用する場合
+python -m http.server 8000
+```
 
 ---
 
-## 💻 ローカルでの実行
+## ライセンス
 
-ビルドステップ不要の Pure Vanilla HTML/JS のため、以下のいずれかで即座にプレビュー可能です：
-
-- `index.html` をブラウザで直接ダブルクリック
-- またはローカルHTTPサーバーを起動：
-  ```bash
-  # Python
-  python -m http.server 8000
-  ```
-  ブラウザで `http://localhost:8000` を開きます。
-
----
-
-## 📄 ライセンス
-
-[MIT License](LICENSE) © 2026 okawawaka
+[MIT License](LICENSE)
