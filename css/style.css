@@ -231,20 +231,34 @@ header.app-header {
 }
 
 .panel-header {
-  padding: 8px 14px;
+  padding: 8px 12px;
   background: var(--ink-50);
   border-bottom: var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.panel-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  width: 100%;
 }
 
-.panel-header-left {
-  display: flex;
-  align-items: center;
+.panel-header-row.bottom-row {
   gap: 8px;
-  flex-wrap: wrap;
+}
+
+.mode-tabs-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-400);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-help-indicator {
@@ -261,6 +275,8 @@ header.app-header {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
 }
 
@@ -278,13 +294,14 @@ header.app-header {
   padding: 2px;
   border-radius: 3px;
   gap: 2px;
+  flex: 1;
 }
 
 .view-tab {
   font-family: var(--font-sans);
   font-size: 10.5px;
   font-weight: 600;
-  padding: 2px 7px;
+  padding: 3px 6px;
   background: transparent;
   border: none;
   border-radius: 2px;
@@ -292,6 +309,8 @@ header.app-header {
   cursor: pointer;
   transition: all 0.12s ease;
   white-space: nowrap;
+  flex: 1;
+  text-align: center;
 }
 
 .view-tab:hover {
@@ -308,23 +327,33 @@ header.app-header {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .btn-ghost-sm {
   font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 600;
-  background: transparent;
-  border: none;
-  color: var(--ink-500);
+  background: var(--pure-white);
+  border: 1px solid var(--ink-300);
+  color: var(--ink-800);
   cursor: pointer;
-  padding: 3px 6px;
+  padding: 4px 10px;
   border-radius: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.3;
+  transition: all 0.15s ease;
 }
 
 .btn-ghost-sm:hover {
-  background: var(--ink-200);
+  background: var(--ink-100);
   color: var(--ink-900);
+  border-color: var(--ink-500);
 }
 
 /* Sentence Yield Bar (文プレビュー) */
