@@ -177,7 +177,8 @@ export class UIController {
       if (this.linkSourceNode && this.linkSourceNode.id !== node.id) {
         this.finishLinkArrow(this.linkSourceNode, node);
       } else {
-        this.showToast('異なるノードを選択してください');
+        const isEn = window.i18n && window.i18n.currentLang === 'en';
+        this.showToast(isEn ? 'Select a different node' : '異なるノードを選択してください');
       }
       return;
     }
@@ -206,10 +207,11 @@ export class UIController {
 
   startLinkArrowMode() {
     if (!this.selectedNode) return;
+    const isEn = window.i18n && window.i18n.currentLang === 'en';
     this.isLinkingMode = true;
     this.linkSourceNode = this.selectedNode;
     this.app.renderer.linkingSourceId = this.selectedNode.id;
-    this.showToast('移動先（着地点）のノードをクリックしてください');
+    this.showToast(isEn ? 'Click landing site (target) node' : '移動先（着地点）のノードをクリックしてください');
     this.app.render();
   }
 
@@ -221,19 +223,21 @@ export class UIController {
   }
 
   finishLinkArrow(sourceNode, targetNode) {
+    const isEn = window.i18n && window.i18n.currentLang === 'en';
     const moveId = 'mov' + Math.floor(Math.random() * 100);
     sourceNode.movementId = moveId;
     targetNode.movementId = moveId;
 
     this.cancelLinkArrowMode();
     this.app.syncTreeToText();
-    this.showToast('移動矢印を接続しました');
+    this.showToast(isEn ? 'Movement arrow connected' : '移動矢印を接続しました');
   }
 
   promptEditSelectedNode() {
     if (!this.selectedNode) return;
+    const isEn = window.i18n && window.i18n.currentLang === 'en';
     const currentLabel = this.selectedNode.label;
-    const newLabel = prompt('ノードラベルを編集:', currentLabel);
+    const newLabel = prompt(isEn ? 'Edit node label:' : 'ノードラベルを編集:', currentLabel);
     if (newLabel !== null && newLabel.trim() !== '') {
       this.selectedNode.label = newLabel.trim();
       this.selectedNode.parseLabelAnnotations();
@@ -243,7 +247,8 @@ export class UIController {
 
   addChildToSelectedNode() {
     if (!this.selectedNode) return;
-    const childLabel = prompt('追加する子ノードのラベル (例: DP, book, etc.):', 'XP');
+    const isEn = window.i18n && window.i18n.currentLang === 'en';
+    const childLabel = prompt(isEn ? 'Child node label (e.g. DP, book):' : '追加する子ノードのラベル (例: DP, book, etc.):', 'XP');
     if (childLabel !== null && childLabel.trim() !== '') {
       const newNode = new (this.app.TreeNode)(childLabel.trim(), [], true);
       this.selectedNode.children.push(newNode);
@@ -254,14 +259,15 @@ export class UIController {
 
   addSiblingToSelectedNode() {
     if (!this.selectedNode) return;
+    const isEn = window.i18n && window.i18n.currentLang === 'en';
     const parent = this.findParentNode(this.app.currentTree, this.selectedNode.id);
     if (!parent) {
-      this.showToast('ルートノードには兄弟を追加できません');
+      this.showToast(isEn ? 'Cannot add sibling to root node' : 'ルートノードには兄弟を追加できません');
       return;
     }
-    const sibLabel = prompt('追加する兄弟ノードのラベル:', 'YP');
-    if (sibLabel !== null && sibLabel.trim() !== '') {
-      const newNode = new (this.app.TreeNode)(sibLabel.trim(), [], true);
+    const siblingLabel = prompt(isEn ? 'Sibling node label (e.g. VP, PP):' : '追加する兄弟ノードのラベル (例: VP, PP, etc.):', 'YP');
+    if (siblingLabel !== null && siblingLabel.trim() !== '') {
+      const newNode = new (this.app.TreeNode)(siblingLabel.trim(), [], true);
       const idx = parent.children.indexOf(this.selectedNode);
       parent.children.splice(idx + 1, 0, newNode);
       this.app.syncTreeToText();

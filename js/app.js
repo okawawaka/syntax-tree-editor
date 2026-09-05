@@ -3,12 +3,12 @@
  * Integrates Parser, Layout, Renderer, UI, Presets and Exporters.
  */
 
-import { TreeNode, TreeParser } from './parser.js?v=20260905_1';
-import { TreeLayout } from './tree-layout.js?v=20260905_1';
-import { TreeRenderer } from './renderer.js?v=20260905_1';
-import { LatexExporter } from './latex-exporter.js?v=20260905_1';
-import { PRESETS } from './presets.js?v=20260905_1';
-import { UIController } from './ui-controller.js?v=20260905_1';
+import { TreeNode, TreeParser } from './parser.js?v=20260905_3';
+import { TreeLayout } from './tree-layout.js?v=20260905_3';
+import { TreeRenderer } from './renderer.js?v=20260905_3';
+import { LatexExporter } from './latex-exporter.js?v=20260905_3';
+import { PRESETS_PEDAGOGICAL, PRESETS_ACADEMIC } from './presets.js?v=20260905_3';
+import { UIController } from './ui-controller.js?v=20260905_3';
 
 class SyntaxTreeApp {
   constructor() {
@@ -17,6 +17,7 @@ class SyntaxTreeApp {
     this.currentMovements = [];
     this.layoutData = null;
     this.isSyncing = false;
+    this.grammarMode = 'pedagogical';
 
     this.layout = new TreeLayout({
       fontSize: 16,
@@ -51,6 +52,16 @@ class SyntaxTreeApp {
   }
 
   init() {
+    if (window.i18n) window.i18n.init();
+    try {
+      this.grammarMode = localStorage.getItem('syntax_tree_editor_grammar_mode') || 'pedagogical';
+    } catch (e) {
+      this.grammarMode = 'pedagogical';
+    }
+    this.setupGrammarModeListeners();
+    window.addEventListener('languagechange', () => {
+      this.populatePresets();
+    });
     this.populatePresets();
     this.setupViewModeListeners();
     this.setupEditorListeners();
@@ -92,7 +103,8 @@ class SyntaxTreeApp {
     }
 
     // Default: Always Basic SVO (Preset 0)
-    return PRESETS[0].code;
+    const presets = this.grammarMode === 'academic' ? PRESETS_ACADEMIC : PRESETS_PEDAGOGICAL;
+    return presets[0].code;
   }
 
 
@@ -130,24 +142,44 @@ class SyntaxTreeApp {
     }
   }
 
-  populatePresets() {
-    const select = document.getElementById('preset-select');
-    if (!select) return;
+  getCurrentPresets() {
+    return this.grammarMode === 'academic' ? PRESETS_ACADEMIC : PRESETS_PEDAGOGICAL;
+  }
 
-    select.innerHTML = '';
-    PRESETS.forEach((p, idx) => {
-      const opt = document.createElement('option');
-      opt.value = idx;
-      opt.textContent = p.title;
-      select.appendChild(opt);
-    });
+  setupGrammarModeListeners() {
+    const btnPed = document.getElementById('grammar-pedagogical');
+    const btnAcad = document.getElementById('grammar-academic');
 
-    select.value = '0';
+    const updateButtons = () => {
+      if (this.grammarMode === 'academic') {
+        btnAcad?.classList.add('active');
+        btnPed?.classList.remove('active');
+      } else {
+        btnPed?.classList.add('active');
+        btnAcad?.classList.remove('active');
+      }
 
-    select.addEventListener('change', (e) => {
-      const idx = parseInt(e.target.value, 10);
-      if (!isNaN(idx) && PRESETS[idx]) {
-        const code = PRESETS[idx].code;
+      // Toggle academic quick symbol buttons in symbol bar
+      document.querySelectorAll('.quick-sym-btn.sym-acad').forEach(btn => {
+        btn.style.display = this.grammarMode === 'academic' ? 'inline-flex' : 'none';
+      });
+    };
+
+    updateButtons();
+
+    const switchMode = (mode) => {
+      if (this.grammarMode === mode) return;
+      this.grammarMode = mode;
+      try {
+        localStorage.setItem('syntax_tree_editor_grammar_mode', mode);
+      } catch (e) {}
+      updateButtons();
+      this.populatePresets();
+
+      // Load first preset of newly selected framework
+      const presets = this.getCurrentPresets();
+      if (presets.length > 0) {
+        const code = presets[0].code;
         const { tree } = TreeParser.parse(code);
         const indented = tree ? TreeParser.stringify(tree, true) : code;
         const flat = tree ? TreeParser.stringify(tree, false) : code;
@@ -160,7 +192,60 @@ class SyntaxTreeApp {
         this.parseAndRender(indented);
         if (tree) this.updateSentence(tree);
         this.ui.resetView();
-        this.ui.showToast(`プリセット「${PRESETS[idx].title}」を読み込みました`);
+
+        const isEn = window.i18n && window.i18n.currentLang === 'en';
+        const title = isEn ? (presets[0].titleEn || presets[0].titleJa) : presets[0].titleJa;
+        const msg = isEn ? `Loaded preset "${title}"` : `プリセット「${title}」を読み込みました`;
+        this.ui.showToast(msg);
+      }
+    };
+
+    btnPed?.addEventListener('click', () => switchMode('pedagogical'));
+    btnAcad?.addEventListener('click', () => switchMode('academic'));
+  }
+
+  populatePresets() {
+    const select = document.getElementById('preset-select');
+    if (!select) return;
+
+    const presets = this.getCurrentPresets();
+    const isEn = window.i18n && window.i18n.currentLang === 'en';
+
+    select.innerHTML = '';
+    presets.forEach((p, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.textContent = isEn ? (p.titleEn || p.titleJa) : p.titleJa;
+      select.appendChild(opt);
+    });
+
+    select.value = '0';
+
+    // Remove existing change listener by replacing element clone
+    const newSelect = select.cloneNode(true);
+    select.parentNode.replaceChild(newSelect, select);
+
+    newSelect.addEventListener('change', (e) => {
+      const idx = parseInt(e.target.value, 10);
+      const currentList = this.getCurrentPresets();
+      if (!isNaN(idx) && currentList[idx]) {
+        const code = currentList[idx].code;
+        const { tree } = TreeParser.parse(code);
+        const indented = tree ? TreeParser.stringify(tree, true) : code;
+        const flat = tree ? TreeParser.stringify(tree, false) : code;
+
+        this.isSyncing = true;
+        if (this.editorIndented) this.editorIndented.value = indented;
+        if (this.editorFlat) this.editorFlat.value = flat;
+        this.isSyncing = false;
+
+        this.parseAndRender(indented);
+        if (tree) this.updateSentence(tree);
+        this.ui.resetView();
+
+        const title = isEn ? (currentList[idx].titleEn || currentList[idx].titleJa) : currentList[idx].titleJa;
+        const msg = isEn ? `Loaded preset "${title}"` : `プリセット「${title}」を読み込みました`;
+        this.ui.showToast(msg);
       }
     });
   }
@@ -346,43 +431,52 @@ class SyntaxTreeApp {
       this.copyPNGToClipboard();
     });
 
-    // Export LaTeX Modal
+    // Export Code Modal (LaTeX, Mermaid, JSON, Unicode)
     document.getElementById('btn-export-latex')?.addEventListener('click', () => {
-      this.openLatexModal();
+      this.openExportModal();
     });
 
-    // LaTeX Tabs (forest vs tikz-qtree)
-    let activeLatexTab = 'forest';
+    let activeExportTab = 'forest';
     const tabForest = document.getElementById('tab-latex-forest');
     const tabTikz = document.getElementById('tab-latex-tikz');
+    const tabMermaid = document.getElementById('tab-export-mermaid');
+    const tabJson = document.getElementById('tab-export-json');
+    const tabUnicode = document.getElementById('tab-export-unicode');
     const codeArea = document.getElementById('latex-code-area');
 
-    const updateLatexView = () => {
-      if (activeLatexTab === 'forest') {
-        tabForest.classList.add('active');
-        tabTikz.classList.remove('active');
+    const updateExportView = () => {
+      const allTabs = [tabForest, tabTikz, tabMermaid, tabJson, tabUnicode];
+      allTabs.forEach(t => t?.classList.remove('active'));
+
+      if (activeExportTab === 'forest') {
+        tabForest?.classList.add('active');
         codeArea.value = LatexExporter.toForest(this.currentTree, this.currentMovements);
-      } else {
-        tabForest.classList.remove('active');
-        tabTikz.classList.add('active');
+      } else if (activeExportTab === 'tikz') {
+        tabTikz?.classList.add('active');
         codeArea.value = LatexExporter.toTikzQtree(this.currentTree);
+      } else if (activeExportTab === 'mermaid') {
+        tabMermaid?.classList.add('active');
+        codeArea.value = TreeParser.toMermaid(this.currentTree);
+      } else if (activeExportTab === 'json') {
+        tabJson?.classList.add('active');
+        codeArea.value = TreeParser.toJSON(this.currentTree);
+      } else if (activeExportTab === 'unicode') {
+        tabUnicode?.classList.add('active');
+        codeArea.value = TreeParser.toUnicodeTree(this.currentTree);
       }
     };
 
-    tabForest?.addEventListener('click', () => {
-      activeLatexTab = 'forest';
-      updateLatexView();
-    });
+    tabForest?.addEventListener('click', () => { activeExportTab = 'forest'; updateExportView(); });
+    tabTikz?.addEventListener('click', () => { activeExportTab = 'tikz'; updateExportView(); });
+    tabMermaid?.addEventListener('click', () => { activeExportTab = 'mermaid'; updateExportView(); });
+    tabJson?.addEventListener('click', () => { activeExportTab = 'json'; updateExportView(); });
+    tabUnicode?.addEventListener('click', () => { activeExportTab = 'unicode'; updateExportView(); });
 
-    tabTikz?.addEventListener('click', () => {
-      activeLatexTab = 'tikz';
-      updateLatexView();
-    });
-
-    // Copy LaTeX code
+    // Copy exported code
     document.getElementById('btn-copy-latex')?.addEventListener('click', () => {
       navigator.clipboard.writeText(codeArea.value).then(() => {
-        this.ui.showToast('LaTeXコードをクリップボードにコピーしました');
+        const msg = window.i18n ? window.i18n.t('toastCopyCode') : 'コードをクリップボードにコピーしました';
+        this.ui.showToast(msg);
       });
     });
 
@@ -401,7 +495,8 @@ class SyntaxTreeApp {
       const code = this.editorFlat?.value || this.editorIndented?.value || '';
       url.hash = encodeURIComponent(code);
       navigator.clipboard.writeText(url.toString()).then(() => {
-        this.ui.showToast('共有リンクをクリップボードにコピーしました');
+        const msg = window.i18n ? window.i18n.t('toastCopyUrl') : '共有リンクをクリップボードにコピーしました';
+        this.ui.showToast(msg);
       });
     });
   }
@@ -470,6 +565,10 @@ class SyntaxTreeApp {
     } catch (e) {
       console.warn('Storage save failed', e);
     }
+  }
+
+  openExportModal() {
+    this.openLatexModal();
   }
 
   openLatexModal() {

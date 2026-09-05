@@ -17,7 +17,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/style.css?v=20260905_2">
+  <link rel="stylesheet" href="css/style.css?v=20260905_3">
+  <!-- i18n dictionary and manager -->
+  <script src="js/i18n.js?v=20260905_3"></script>
 </head>
 <body>
 
@@ -27,14 +29,22 @@
   <header class="app-header">
     <div class="brand-section">
       <div class="title-wrap">
-        <h1 class="app-title">構文木エディタ</h1>
-        <span class="app-subtitle">SYNTAX TREE EDITOR</span>
+        <h1 class="app-title" data-i18n="appTitle">構文木エディタ</h1>
+        <span class="app-subtitle" data-i18n="appSubtitle">SYNTAX TREE EDITOR</span>
       </div>
     </div>
 
     <div class="header-center">
+      <div class="grammar-mode-group">
+        <span class="grammar-mode-label" data-i18n="grammarModeLabel">体系:</span>
+        <div class="grammar-mode-switch" role="group" aria-label="Grammar Framework">
+          <button type="button" id="grammar-pedagogical" class="grammar-btn active" data-i18n="grammarPedagogical" data-i18n-title="grammarPedagogicalTitle" title="入門・初級向け S / NP 体系">簡易 (S/NP)</button>
+          <button type="button" id="grammar-academic" class="grammar-btn" data-i18n="grammarAcademic" data-i18n-title="grammarAcademicTitle" title="生成文法・研究向け TP / DP / vP 体系">学術 (TP/DP)</button>
+        </div>
+      </div>
+
       <div class="preset-group">
-        <label for="preset-select">プリセット</label>
+        <label for="preset-select" data-i18n="presetLabel">プリセット</label>
         <select id="preset-select" class="select-control">
           <!-- Populated by JS -->
         </select>
@@ -42,29 +52,35 @@
     </div>
 
     <div class="header-actions">
-      <button id="btn-share-url" class="btn" title="URLに状態を含めてコピー">
+      <!-- Language Switcher (Swiss Segment Control) -->
+      <div class="lang-switch" role="group" aria-label="Language Selector">
+        <button type="button" id="lang-ja" class="lang-btn active" title="日本語 (Japanese)">JA</button>
+        <button type="button" id="lang-en" class="lang-btn" title="English">EN</button>
+      </div>
+
+      <button id="btn-share-url" class="btn" data-i18n-title="btnShareUrlTitle" title="URLに状態を含めてコピー">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-        共有
+        <span data-i18n="btnShareUrl">共有</span>
       </button>
 
-      <button id="btn-copy-png" class="btn" title="画像をクリップボードにコピー">
+      <button id="btn-copy-png" class="btn" data-i18n-title="btnCopyImageTitle" title="PNG画像をクリップボードにコピー">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-        画像コピー
+        <span data-i18n="btnCopyImage">画像コピー</span>
       </button>
 
-      <button id="btn-export-svg" class="btn" title="ベクター形式 (SVG) で保存">
+      <button id="btn-export-svg" class="btn" data-i18n-title="btnExportSvgTitle" title="ベクターSVG画像をダウンロード">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        SVG
+        <span data-i18n="btnExportSvg">SVG</span>
       </button>
 
-      <button id="btn-export-png" class="btn btn-primary" title="高解像度 PNG で保存">
+      <button id="btn-export-png" class="btn btn-primary" data-i18n-title="btnExportPngTitle" title="高解像度PNG画像をダウンロード">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        PNG
+        <span data-i18n="btnExportPng">PNG</span>
       </button>
 
-      <button id="btn-export-latex" class="btn btn-accent" title="LaTeX (forest / tikz-qtree) コードを表示">
+      <button id="btn-export-latex" class="btn btn-accent" data-i18n-title="btnExportLatexTitle" title="LaTeX / Mermaid / JSON / テキスト出力">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-        LaTeX
+        <span data-i18n="btnExportLatex">エクスポート</span>
       </button>
     </div>
   </header>
@@ -78,33 +94,33 @@
     <section class="editor-panel">
       <div class="panel-header">
         <div class="panel-header-row top-row">
-          <button type="button" id="btn-show-help" class="btn-help-indicator" title="操作説明を表示 [ ? ]">操作説明 [ ? ]</button>
+          <button type="button" id="btn-show-help" class="btn-help-indicator" data-i18n="helpBtn" data-i18n-title="helpBtnTitle" title="操作説明を表示 [ ? ]">操作説明 [ ? ]</button>
           
           <div class="panel-header-actions">
-            <button type="button" id="btn-format-bracket" class="btn-ghost-sm" title="インデント整形">整形</button>
-            <button type="button" id="btn-clear-bracket" class="btn-ghost-sm" title="クリア">クリア</button>
+            <button type="button" id="btn-format-bracket" class="btn-ghost-sm" data-i18n="btnFormat" data-i18n-title="btnFormatTitle" title="インデント整形">整形</button>
+            <button type="button" id="btn-clear-bracket" class="btn-ghost-sm" data-i18n="btnClear" data-i18n-title="btnClearTitle" title="入力をクリア">クリア</button>
           </div>
         </div>
 
         <div class="panel-header-row bottom-row">
-          <span class="mode-tabs-label">表示</span>
+          <span class="mode-tabs-label" data-i18n="modeTabsLabel">表示</span>
           <div class="view-mode-tabs" role="tablist">
-            <button type="button" id="tab-mode-split" class="view-tab active" title="インデント形式と通常(1行)形式を両方表示">両方</button>
-            <button type="button" id="tab-mode-indent" class="view-tab" title="インデント形式のみ表示">インデント</button>
-            <button type="button" id="tab-mode-flat" class="view-tab" title="通常(1行)形式のみ表示">通常 (1行)</button>
+            <button type="button" id="tab-mode-split" class="view-tab active" data-i18n="tabSplit" data-i18n-title="tabSplitTitle" title="インデント形式と通常(1行)形式を両方表示">両方</button>
+            <button type="button" id="tab-mode-indent" class="view-tab" data-i18n="tabIndent" data-i18n-title="tabIndentTitle" title="インデント形式のみ表示">インデント</button>
+            <button type="button" id="tab-mode-flat" class="view-tab" data-i18n="tabFlat" data-i18n-title="tabFlatTitle" title="通常(1行)形式のみ表示">通常 (1行)</button>
           </div>
         </div>
       </div>
 
       <!-- Sentence Yield Bar (文プレビュー) -->
       <div class="sentence-bar">
-        <span class="sentence-label">文:</span>
+        <span class="sentence-label" data-i18n="sentenceLabel">文:</span>
         <span id="sentence-text" class="sentence-content" title="文（語彙列プレビュー）"></span>
       </div>
 
       <!-- Quick Linguistics Notation Bar -->
       <div class="symbol-bar">
-        <div class="symbol-bar-label">クイック記号入力</div>
+        <div class="symbol-bar-label" data-i18n="symbolBarLabel">クイック記号入力</div>
         <button class="quick-sym-btn" data-insert="'" title="X-bar プライム">X'</button>
         <button class="quick-sym-btn" data-insert="̄" title="X-bar マクロン">X̄</button>
         <button class="quick-sym-btn" data-insert="_i" title="下付きインデックス i">_i</button>
@@ -117,6 +133,11 @@
         <button class="quick-sym-btn" data-insert="[-past]" title="統語素性 [-past]">[-past]</button>
         <button class="quick-sym-btn" data-insert="∅" title="ゼロ・空要素">∅</button>
         <button class="quick-sym-btn" data-insert="λ" title="ラムダ束縛">λ</button>
+        <button class="quick-sym-btn sym-acad" data-insert="TP" title="Tense Phrase (学術)" style="display: none;">TP</button>
+        <button class="quick-sym-btn sym-acad" data-insert="DP" title="Determiner Phrase (学術)" style="display: none;">DP</button>
+        <button class="quick-sym-btn sym-acad" data-insert="CP" title="Complementizer Phrase (学術)" style="display: none;">CP</button>
+        <button class="quick-sym-btn sym-acad" data-insert="vP" title="Little v Phrase (学術)" style="display: none;">vP</button>
+        <button class="quick-sym-btn sym-acad" data-insert="PRO" title="Null Subject PRO (学術)" style="display: none;">PRO</button>
       </div>
 
       <!-- Dual Textarea Container -->
@@ -125,7 +146,7 @@
         <!-- PANE: INDENTED -->
         <div class="editor-subpane pane-indented" id="pane-indented">
           <div class="subpane-header">
-            <span class="subpane-title">インデント形式</span>
+            <span class="subpane-title" data-i18n="labelIndented">インデント形式 (階層表示)</span>
           </div>
           <textarea 
             id="bracket-editor-indented" 
@@ -137,7 +158,7 @@
         <!-- PANE: NORMAL / FLAT -->
         <div class="editor-subpane pane-flat" id="pane-flat">
           <div class="subpane-header">
-            <span class="subpane-title">通常形式 (1行)</span>
+            <span class="subpane-title" data-i18n="labelFlat">通常形式 (1行ブラケット)</span>
           </div>
           <textarea 
             id="bracket-editor-flat" 
@@ -162,14 +183,14 @@
 
       <!-- Floating Zoom Controls -->
       <div class="canvas-floating-controls">
-        <button id="btn-zoom-out" class="btn btn-icon-only" title="縮小">
+        <button id="btn-zoom-out" class="btn btn-icon-only" data-i18n-title="zoomOutTitle" title="縮小">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         </button>
         <span id="zoom-level-text" class="zoom-text">100%</span>
-        <button id="btn-zoom-in" class="btn btn-icon-only" title="拡大">
+        <button id="btn-zoom-in" class="btn btn-icon-only" data-i18n-title="zoomInTitle" title="拡大">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         </button>
-        <button id="btn-zoom-reset" class="btn btn-icon-only" title="リセット">
+        <button id="btn-zoom-reset" class="btn btn-icon-only" data-i18n-title="zoomResetTitle" title="等倍に戻す (100%)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
         </button>
       </div>
@@ -178,12 +199,12 @@
       <div id="node-action-toolbar" class="node-action-toolbar">
         <span id="selected-node-name" class="selected-node-badge">Node</span>
         <div class="toolbar-separator"></div>
-        <button id="btn-node-edit" class="btn" title="ラベルを変更">編集</button>
-        <button id="btn-node-add-child" class="btn" title="子ノードを追加">+ 子</button>
-        <button id="btn-node-add-sibling" class="btn" title="兄弟ノードを追加">+ 兄弟</button>
-        <button id="btn-node-toggle-triangle" class="btn" title="三角形（屋根）を切り替え">△ 屋根</button>
-        <button id="btn-node-link-arrow" class="btn" title="別のノードへ移動矢印を引く">↳ 矢印</button>
-        <button id="btn-node-delete" class="btn" style="color: #D32F2F;" title="ノードを削除">削除</button>
+        <button id="btn-node-edit" class="btn" data-i18n="btnEditLabel" title="ラベルを変更">ラベル編集</button>
+        <button id="btn-node-add-child" class="btn" data-i18n="btnAddChild" title="子ノードを追加">+ 子ノード</button>
+        <button id="btn-node-add-sibling" class="btn" data-i18n="btnAddSibling" title="兄弟ノードを追加">+ 兄弟ノード</button>
+        <button id="btn-node-toggle-triangle" class="btn" data-i18n="btnToggleRoof" title="三角形（屋根）を切り替え">△ 屋根</button>
+        <button id="btn-node-link-arrow" class="btn" data-i18n="btnLinkArrow" title="別のノードへ移動矢印を引く">↳ 矢印</button>
+        <button id="btn-node-delete" class="btn" data-i18n="btnDeleteNode" style="color: #D32F2F;" title="ノードを削除">削除</button>
       </div>
 
       <!-- Bottom Status & Typography Settings Bar -->
@@ -191,48 +212,48 @@
         <div class="settings-group">
           <!-- Branch Line Style -->
           <div class="setting-item">
-            <label>枝の形状:</label>
+            <label data-i18n="labelBranches">枝の形状:</label>
             <div class="radio-group">
               <label>
                 <input type="radio" name="branch-style" value="straight" checked>
-                <span>直線</span>
+                <span data-i18n="branchStraight">直線</span>
               </label>
               <label>
                 <input type="radio" name="branch-style" value="curved">
-                <span>曲線</span>
+                <span data-i18n="branchCurved">曲線</span>
               </label>
             </div>
           </div>
 
           <!-- Align Leaves Bottom -->
           <div class="setting-item">
-            <label for="toggle-align-leaves">単語底辺揃え:</label>
+            <label for="toggle-align-leaves" data-i18n="labelAlignLeaves">単語底辺揃え:</label>
             <input type="checkbox" id="toggle-align-leaves" checked>
           </div>
 
           <!-- Leaf Italic -->
           <div class="setting-item">
-            <label for="toggle-leaf-italic">語彙イタリック:</label>
+            <label for="toggle-leaf-italic" data-i18n="labelItalicWords">単語斜体:</label>
             <input type="checkbox" id="toggle-leaf-italic" checked>
           </div>
 
           <!-- Font Size Slider -->
           <div class="setting-item">
-            <label for="setting-font-size">文字:</label>
+            <label for="setting-font-size" data-i18n="labelFontSize">文字サイズ:</label>
             <input type="range" id="setting-font-size" class="slider-control" min="12" max="24" value="16">
             <span id="font-size-val" class="setting-val">16px</span>
           </div>
 
           <!-- Level Height Slider -->
           <div class="setting-item">
-            <label for="setting-level-height">階層高:</label>
+            <label for="setting-level-height" data-i18n="labelLevelHeight">階層高:</label>
             <input type="range" id="setting-level-height" class="slider-control" min="40" max="100" value="64">
             <span id="level-height-val" class="setting-val">64px</span>
           </div>
 
           <!-- Node Margin Slider -->
           <div class="setting-item">
-            <label for="setting-node-margin">枝間隔:</label>
+            <label for="setting-node-margin" data-i18n="labelSiblingGap">間隔:</label>
             <input type="range" id="setting-node-margin" class="slider-control" min="14" max="60" value="28">
             <span id="node-margin-val" class="setting-val">28px</span>
           </div>
@@ -243,23 +264,126 @@
   </main>
 
   <!-- ========================================================================
-       MODAL DIALOG: LATEX EXPORT
+       MODAL DIALOG: CODE EXPORT (LaTeX, Mermaid, JSON, Unicode Text)
        ======================================================================== -->
   <div id="latex-modal" class="modal-overlay">
-    <div class="modal-box">
+    <div class="modal-box modal-box-lg">
       <div class="modal-header">
-        <h3 class="modal-title">LaTeX 構文木コード エクスポート</h3>
+        <h3 class="modal-title" data-i18n="exportModalTitle">構文木コードエクスポート</h3>
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-tabs">
-        <button id="tab-latex-forest" class="tab-btn active">forest (推奨・現代標準)</button>
-        <button id="tab-latex-tikz" class="tab-btn">tikz-qtree</button>
+        <button id="tab-latex-forest" class="tab-btn active" data-i18n="tabForest">LaTeX (forest)</button>
+        <button id="tab-latex-tikz" class="tab-btn" data-i18n="tabTikz">LaTeX (tikz-qtree)</button>
+        <button id="tab-export-mermaid" class="tab-btn" data-i18n="tabMermaid">Mermaid</button>
+        <button id="tab-export-json" class="tab-btn" data-i18n="tabJson">JSON</button>
+        <button id="tab-export-unicode" class="tab-btn" data-i18n="tabUnicode">テキストツリー</button>
       </div>
       <div class="modal-body">
         <textarea id="latex-code-area" class="modal-textarea" readonly spellcheck="false"></textarea>
       </div>
       <div class="modal-footer">
-        <button id="btn-copy-latex" class="btn btn-primary">コードをコピー</button>
+        <button id="btn-copy-latex" class="btn btn-primary" data-i18n="btnCopyCode">コードをコピー</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DIALOG: HELP & INSTRUCTIONS
+       ======================================================================== -->
+  <div id="help-modal" class="modal-overlay">
+    <div class="modal-box modal-box-lg" role="dialog" aria-modal="true" aria-labelledby="help-title">
+      <div class="modal-header">
+        <h3 id="help-title" class="modal-title" data-i18n="helpModalTitle">操作説明 (User Guide)</h3>
+        <button type="button" class="modal-close" aria-label="閉じる">&times;</button>
+      </div>
+      <div class="modal-body modal-help-body">
+        <h3 data-i18n="helpSecShortcuts">ショートカットキー</h3>
+        <ul>
+          <li><kbd>?</kbd> / <kbd>Shift</kbd> + <kbd>/</kbd> : <span data-i18n="helpShortcut1">操作説明画面の開閉</span></li>
+          <li><kbd>Esc</kbd> : <span data-i18n="helpShortcut2">モーダル画面を閉じる / ノード選択の解除</span></li>
+          <li><kbd>Delete</kbd> / <kbd>Backspace</kbd> : <span data-i18n="helpShortcut3">キャンバス上で選択中のノードを削除</span></li>
+        </ul>
+
+        <h3 data-i18n="helpSecCanvas">キャンバス操作</h3>
+        <ul>
+          <li data-i18n="helpCanvas1">キャンバスドラッグ: 表示領域のパン（移動）</li>
+          <li data-i18n="helpCanvas2">マウスホイール / 拡大・縮小ボタン: ズーム表示</li>
+          <li data-i18n="helpCanvas3">ノードクリック: ノードの選択と直接編集（ラベル編集・ノード追加・削除）</li>
+        </ul>
+
+        <h3 data-i18n="helpSecNotation">基本記法</h3>
+        <table class="help-table">
+          <thead>
+            <tr>
+              <th data-i18n="helpThFeature">機能</th>
+              <th data-i18n="helpThInput">入力例</th>
+              <th data-i18n="helpThOutput">出力・説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-i18n="helpRowBase">基本構造</td>
+              <td><code>[S [NP ...] [VP ...]]</code></td>
+              <td data-i18n="helpRowBaseDesc">角括弧による階層的ネスト構造</td>
+            </tr>
+            <tr>
+              <td data-i18n="helpRowWord">単語直書き</td>
+              <td><code>[N cat]</code></td>
+              <td data-i18n="helpRowWordDesc">範疇ノード直下に語彙項目を配置</td>
+            </tr>
+            <tr>
+              <td data-i18n="helpRowRoof1">三角形省略（句）</td>
+              <td><code>[^NP a wug]</code></td>
+              <td data-i18n="helpRowRoof1Desc">範疇名の下に底辺を持つ二等辺三角形を描画</td>
+            </tr>
+            <tr>
+              <td data-i18n="helpRowRoof2">三角形省略（語彙）</td>
+              <td><code>[NP [^ a wug]]</code></td>
+              <td data-i18n="helpRowRoof2Desc">語彙の直前に ^ を付与して三角形を描画</td>
+            </tr>
+            <tr>
+              <td data-i18n="helpRowPrime">Xバー（プライム）</td>
+              <td><code>[N' [N cat]]</code></td>
+              <td data-i18n="helpRowPrimeDesc">アポストロフィによる中間投射表記</td>
+            </tr>
+            <tr>
+              <td data-i18n="helpRowMacron">Xバー（マクロン）</td>
+              <td><code>[N̄ [N cat]]</code></td>
+              <td data-i18n="helpRowMacronDesc">マクロン文字による中間投射表記</td>
+            </tr>
+            <tr>
+              <td data-i18n="helpRowSub">下付き添字</td>
+              <td><code>[t_i]</code>, <code>[DP_1]</code></td>
+              <td data-i18n="helpRowSubDesc">アンダースコア以降を下付き文字として表示</td>
+            </tr>
+            <tr>
+              <td data-i18n="helpRowMove">移動矢印</td>
+              <td><code>[NP:wh ...] [t_i]</code></td>
+              <td data-i18n="helpRowMoveDesc">同一タグ（@1等）またはラベルを持つノード間を曲線矢印で接続</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 data-i18n="helpSecExport">エクスポート</h3>
+        <ul>
+          <li data-i18n="helpExport1">画像コピー: PNG画像をクリップボードに直接コピー</li>
+          <li data-i18n="helpExport2">PNG / SVG: 画像ファイルとしてローカルへ保存</li>
+          <li data-i18n="helpExport3">エクスポート: LaTeX（forest / tikz-qtree）、Mermaid、JSON、Unicodeテキストを出力</li>
+          <li data-i18n="helpExport4">共有: 編集中のデータを埋め込んだURLをクリップボードにコピー</li>
+        </ul>
+
+        <h3 data-i18n="helpSecGithub">リポジトリ案内</h3>
+        <p data-i18n="helpGithubDesc">バグ報告、機能要望、ソースコードの確認は GitHub リポジトリをご参照ください。</p>
+        <p>
+          <a href="https://github.com/okawawaka/syntax-tree-editor" target="_blank" rel="noopener noreferrer" class="modal-link">
+            <svg class="modal-link-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            <span data-i18n="helpGithubLink">GitHub: okawawaka/syntax-tree-editor</span>
+          </a>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn modal-close" data-i18n="btnClose">閉じる</button>
       </div>
     </div>
   </div>

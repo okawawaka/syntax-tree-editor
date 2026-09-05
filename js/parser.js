@@ -353,4 +353,106 @@ export class TreeParser {
     traverse(node);
     return words.join(' ');
   }
+
+  /**
+   * Export AST as Mermaid diagram code (graph TD)
+   */
+  static toMermaid(node) {
+    if (!node) return '';
+    const lines = ['graph TD'];
+    let counter = 0;
+    const nodeMap = new Map();
+
+    function getId(n) {
+      if (!nodeMap.has(n)) {
+        nodeMap.set(n, `n${counter++}`);
+      }
+      return nodeMap.get(n);
+    }
+
+    function escapeLabel(text) {
+      return (text || '').replace(/"/g, "'").replace(/[[\]()]/g, '');
+    }
+
+    function getLabel(n) {
+      let lbl = n.displayLabel !== undefined && n.displayLabel !== null ? n.displayLabel : n.label;
+      if (n.subscript) lbl += `_${n.subscript}`;
+      if (n.isTriangle) lbl = `△ ${lbl}`;
+      return lbl;
+    }
+
+    function traverse(n) {
+      const myId = getId(n);
+      const myLabel = escapeLabel(getLabel(n));
+
+      if (n.children && n.children.length > 0) {
+        for (const child of n.children) {
+          const childId = getId(child);
+          const childLabel = escapeLabel(getLabel(child));
+          lines.push(`    ${myId}["${myLabel}"] --> ${childId}["${childLabel}"]`);
+          traverse(child);
+        }
+      } else if (nodeMap.size === 1) {
+        lines.push(`    ${myId}["${myLabel}"]`);
+      }
+    }
+
+    traverse(node);
+    return lines.join('\n');
+  }
+
+  /**
+   * Export AST as formatted JSON
+   */
+  static toJSON(node) {
+    if (!node) return '{}';
+    function serialize(n) {
+      return {
+        label: n.displayLabel !== undefined && n.displayLabel !== null ? n.displayLabel : n.label,
+        isLeaf: !!n.isLeaf,
+        isTriangle: !!n.isTriangle,
+        subscript: n.subscript || undefined,
+        movementId: n.movementId || undefined,
+        features: (n.features && n.features.length) ? n.features : undefined,
+        children: (n.children && n.children.length) ? n.children.map(serialize) : undefined
+      };
+    }
+    return JSON.stringify(serialize(node), null, 2);
+  }
+
+  /**
+   * Export AST as clean Unicode Text Tree (ASCII/Unicode Art)
+   */
+  static toUnicodeTree(node) {
+    if (!node) return '';
+    const lines = [];
+
+    function getLabel(n) {
+      let lbl = n.displayLabel !== undefined && n.displayLabel !== null ? n.displayLabel : n.label;
+      if (n.subscript) lbl += `_${n.subscript}`;
+      if (n.isTriangle) lbl = `△ ${lbl}`;
+      return lbl;
+    }
+
+    function build(n, prefix = '', isTail = true, isRoot = true) {
+      const lbl = getLabel(n);
+      if (isRoot) {
+        lines.push(lbl);
+      } else {
+        lines.push(prefix + (isTail ? '└── ' : '├── ') + lbl);
+      }
+
+      if (n.children && n.children.length > 0) {
+        const newPrefix = isRoot ? '' : prefix + (isTail ? '    ' : '│   ');
+        for (let i = 0; i < n.children.length; i++) {
+          const child = n.children[i];
+          const isLast = (i === n.children.length - 1);
+          build(child, newPrefix, isLast, false);
+        }
+      }
+    }
+
+    build(node);
+    return lines.join('\n');
+  }
 }
