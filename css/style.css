@@ -70,13 +70,13 @@ header.app-header {
   align-items: center;
   flex-shrink: 0;
   white-space: nowrap;
-  gap: 16px;
+  gap: 28px;
 }
 
 .title-wrap {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 10px;
 }
 
 .app-title {
@@ -100,9 +100,9 @@ header.app-header {
 .grammar-mode-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   white-space: nowrap;
-  padding-left: 16px;
+  padding-left: 28px;
   border-left: var(--border-subtle);
 }
 
