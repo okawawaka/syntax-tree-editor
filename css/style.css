@@ -58,10 +58,11 @@ header.app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
+  padding: 0 16px;
   z-index: 20;
   flex-shrink: 0;
-  gap: 8px;
+  gap: 16px;
+  overflow-x: auto;
 }
 
 .brand-section {
@@ -69,6 +70,7 @@ header.app-header {
   align-items: center;
   flex-shrink: 0;
   white-space: nowrap;
+  gap: 16px;
 }
 
 .title-wrap {
@@ -95,35 +97,13 @@ header.app-header {
   white-space: nowrap;
 }
 
-.header-center {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-.preset-group {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
-}
-
-.preset-group label {
-  font-size: 10.5px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--ink-500);
-  white-space: nowrap;
-}
-
 .grammar-mode-group {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   white-space: nowrap;
+  padding-left: 16px;
+  border-left: var(--border-subtle);
 }
 
 .grammar-mode-label {
@@ -176,6 +156,30 @@ header.app-header {
   background: var(--ink-900);
   color: var(--pure-white);
   cursor: default;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.preset-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.preset-group label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-500);
+  white-space: nowrap;
 }
 
 .select-control {
