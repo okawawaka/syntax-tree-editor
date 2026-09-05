@@ -231,12 +231,20 @@ header.app-header {
 }
 
 .panel-header {
-  padding: 10px 16px;
+  padding: 8px 14px;
   background: var(--ink-50);
   border-bottom: var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+}
+
+.panel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .btn-help-indicator {
@@ -262,6 +270,40 @@ header.app-header {
   border-color: var(--ink-900);
 }
 
+/* View mode tabs (インデント / 通常(1行) / 両方) */
+.view-mode-tabs {
+  display: inline-flex;
+  align-items: center;
+  background: var(--ink-200);
+  padding: 2px;
+  border-radius: 3px;
+  gap: 2px;
+}
+
+.view-tab {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  color: var(--ink-600);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+}
+
+.view-tab:hover {
+  color: var(--ink-900);
+}
+
+.view-tab.active {
+  background: var(--pure-white);
+  color: var(--ink-900);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
 .panel-header-actions {
   display: flex;
   align-items: center;
@@ -285,9 +327,39 @@ header.app-header {
   color: var(--ink-900);
 }
 
+/* Sentence Yield Bar (文プレビュー) */
+.sentence-bar {
+  padding: 4px 12px;
+  background: var(--ink-50);
+  border-bottom: 1px solid var(--ink-200);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
+.sentence-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-400);
+  flex-shrink: 0;
+}
+
+.sentence-content {
+  font-size: 11.5px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--ink-900);
+  font-family: var(--font-sans);
+  user-select: text;
+}
+
 /* Quick Symbol Keyboard Bar */
 .symbol-bar {
-  padding: 8px 12px;
+  padding: 6px 12px;
   background: var(--pure-white);
   border-bottom: var(--border-subtle);
   display: flex;
@@ -296,7 +368,7 @@ header.app-header {
 }
 
 .symbol-bar-label {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
   color: var(--ink-400);
   text-transform: uppercase;
@@ -309,7 +381,7 @@ header.app-header {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
-  padding: 4px 8px;
+  padding: 3px 7px;
   background: var(--ink-50);
   border: 1px solid var(--ink-200);
   border-radius: 3px;
@@ -324,32 +396,87 @@ header.app-header {
   border-color: var(--ink-900);
 }
 
-/* Textarea Container */
-.editor-textarea-container {
+/* Dual Editor Panes Container */
+.editor-panes-container {
   flex: 1;
-  position: relative;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--pure-white);
 }
 
-#bracket-editor {
+.editor-subpane {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--pure-white);
+}
+
+.subpane-header {
+  padding: 3px 12px;
+  background: var(--ink-50);
+  border-bottom: 1px solid var(--ink-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.subpane-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-500);
+}
+
+.editor-subpane textarea {
   flex: 1;
   width: 100%;
-  padding: 16px;
+  padding: 12px;
   font-family: var(--font-mono);
-  font-size: 13.5px;
-  line-height: 1.6;
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--ink-900);
   background: transparent;
   border: none;
   outline: none;
   resize: none;
-  white-space: pre;
   tab-size: 2;
+  white-space: pre;
 }
 
-#bracket-editor::placeholder {
+.editor-subpane textarea::placeholder {
   color: var(--ink-300);
+}
+
+/* Mode: Split (Both) */
+.editor-panes-container.mode-split .pane-indented {
+  flex: 1.1;
+  border-bottom: 1px solid var(--ink-200);
+}
+
+.editor-panes-container.mode-split .pane-flat {
+  flex: 0.9;
+}
+
+/* Mode: Indent only */
+.editor-panes-container.mode-indent .pane-indented {
+  flex: 1;
+}
+
+.editor-panes-container.mode-indent .pane-flat {
+  display: none;
+}
+
+/* Mode: Flat only */
+.editor-panes-container.mode-flat .pane-flat {
+  flex: 1;
+}
+
+.editor-panes-container.mode-flat .pane-indented {
+  display: none;
 }
 
 /* Error banner */

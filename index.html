@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/style.css?v=20260904_7">
+  <link rel="stylesheet" href="css/style.css?v=20260905_1">
 </head>
 <body>
 
@@ -77,11 +77,26 @@
     <!-- LEFT PANEL: BRACKET CODE EDITOR -->
     <section class="editor-panel">
       <div class="panel-header">
-        <button type="button" id="btn-show-help" class="btn-help-indicator" title="操作説明を表示 [ ? ]">操作説明 [ ? ]</button>
+        <div class="panel-header-left">
+          <button type="button" id="btn-show-help" class="btn-help-indicator" title="操作説明を表示 [ ? ]">操作説明 [ ? ]</button>
+          
+          <div class="view-mode-tabs" role="tablist">
+            <button type="button" id="tab-mode-split" class="view-tab active" title="インデント形式と通常(1行)形式を両方表示">両方</button>
+            <button type="button" id="tab-mode-indent" class="view-tab" title="インデント形式のみ表示">インデント</button>
+            <button type="button" id="tab-mode-flat" class="view-tab" title="通常(1行)形式のみ表示">通常 (1行)</button>
+          </div>
+        </div>
+
         <div class="panel-header-actions">
           <button id="btn-format-bracket" class="btn-ghost-sm" title="インデント整形">整形</button>
           <button id="btn-clear-bracket" class="btn-ghost-sm" title="クリア">クリア</button>
         </div>
+      </div>
+
+      <!-- Sentence Yield Bar (文プレビュー) -->
+      <div class="sentence-bar">
+        <span class="sentence-label">文:</span>
+        <span id="sentence-text" class="sentence-content" title="文（語彙列プレビュー）"></span>
       </div>
 
       <!-- Quick Linguistics Notation Bar -->
@@ -101,15 +116,36 @@
         <button class="quick-sym-btn" data-insert="λ" title="ラムダ束縛">λ</button>
       </div>
 
-      <!-- Textarea with error feedback -->
-      <div class="editor-textarea-container">
-        <textarea 
-          id="bracket-editor" 
-          placeholder="[S [NP [D The] [N cat]] [VP [V sat]]]" 
-          spellcheck="false"
-        ></textarea>
-        <div id="error-banner" class="error-banner"></div>
+      <!-- Dual Textarea Container -->
+      <div class="editor-panes-container mode-split" id="editor-panes-container">
+        
+        <!-- PANE: INDENTED -->
+        <div class="editor-subpane pane-indented" id="pane-indented">
+          <div class="subpane-header">
+            <span class="subpane-title">インデント形式</span>
+          </div>
+          <textarea 
+            id="bracket-editor-indented" 
+            placeholder="[S&#10;  [NP [D The] [N cat]]&#10;  [VP [V sat]]&#10;]" 
+            spellcheck="false"
+          ></textarea>
+        </div>
+
+        <!-- PANE: NORMAL / FLAT -->
+        <div class="editor-subpane pane-flat" id="pane-flat">
+          <div class="subpane-header">
+            <span class="subpane-title">通常形式 (1行)</span>
+          </div>
+          <textarea 
+            id="bracket-editor-flat" 
+            placeholder="[S [NP [D The] [N cat]] [VP [V sat]]]" 
+            spellcheck="false"
+          ></textarea>
+        </div>
+
       </div>
+
+      <div id="error-banner" class="error-banner"></div>
     </section>
 
     <!-- RIGHT PANEL: PREVIEW & INTERACTIVE CANVAS -->
@@ -274,6 +310,6 @@
   <div id="toast" class="toast"></div>
 
   <!-- Main Application Entry Script (ES Module) -->
-  <script type="module" src="js/app.js?v=20260904_7"></script>
+  <script type="module" src="js/app.js?v=20260905_1"></script>
 </body>
 </html>

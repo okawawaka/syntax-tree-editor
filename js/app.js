@@ -3,12 +3,12 @@
  * Integrates Parser, Layout, Renderer, UI, Presets and Exporters.
  */
 
-import { TreeNode, TreeParser } from './parser.js?v=20260904_7';
-import { TreeLayout } from './tree-layout.js?v=20260904_7';
-import { TreeRenderer } from './renderer.js?v=20260904_7';
-import { LatexExporter } from './latex-exporter.js?v=20260904_7';
-import { PRESETS } from './presets.js?v=20260904_7';
-import { UIController } from './ui-controller.js?v=20260904_7';
+import { TreeNode, TreeParser } from './parser.js?v=20260905_1';
+import { TreeLayout } from './tree-layout.js?v=20260905_1';
+import { TreeRenderer } from './renderer.js?v=20260905_1';
+import { LatexExporter } from './latex-exporter.js?v=20260905_1';
+import { PRESETS } from './presets.js?v=20260905_1';
+import { UIController } from './ui-controller.js?v=20260905_1';
 
 class SyntaxTreeApp {
   constructor() {
@@ -16,6 +16,7 @@ class SyntaxTreeApp {
     this.currentTree = null;
     this.currentMovements = [];
     this.layoutData = null;
+    this.isSyncing = false;
 
     this.layout = new TreeLayout({
       fontSize: 16,
@@ -28,6 +29,11 @@ class SyntaxTreeApp {
       fontSize: 16,
       leafItalic: true
     });
+
+    this.editorIndented = document.getElementById('bracket-editor-indented');
+    this.editorFlat = document.getElementById('bracket-editor-flat');
+    this.sentenceEl = document.getElementById('sentence-text');
+    this.activeEditor = this.editorIndented;
 
     this.ui = new UIController(this);
 
@@ -46,16 +52,23 @@ class SyntaxTreeApp {
 
   init() {
     this.populatePresets();
+    this.setupViewModeListeners();
     this.setupEditorListeners();
     this.setupExportListeners();
     this.setupSettingListeners();
 
     // Initial preset: Default to Basic SVO (Preset 0) unless explicitly shared via ?share=1#...
     const initialCode = this.loadInitialContent();
-    const editor = document.getElementById('bracket-editor');
-    editor.value = initialCode;
-    this.parseAndRender(initialCode);
+    const { tree } = TreeParser.parse(initialCode);
+    const indented = tree ? TreeParser.stringify(tree, true) : initialCode;
+    const flat = tree ? TreeParser.stringify(tree, false) : initialCode;
+
+    if (this.editorIndented) this.editorIndented.value = indented;
+    if (this.editorFlat) this.editorFlat.value = flat;
+
+    this.parseAndRender(indented);
     this.syncPresetSelect(initialCode);
+    if (tree) this.updateSentence(tree);
 
     // Clean up residual hash from address bar so page reloads always stay clean
     if (window.location.hash && !window.location.search.includes('share=')) {
@@ -82,6 +95,41 @@ class SyntaxTreeApp {
     return PRESETS[0].code;
   }
 
+
+
+  setupViewModeListeners() {
+    const container = document.getElementById('editor-panes-container');
+    const tabSplit = document.getElementById('tab-mode-split');
+    const tabIndent = document.getElementById('tab-mode-indent');
+    const tabFlat = document.getElementById('tab-mode-flat');
+
+    const setMode = (mode) => {
+      if (!container) return;
+      container.classList.remove('mode-split', 'mode-indent', 'mode-flat');
+      container.classList.add(`mode-${mode}`);
+
+      [tabSplit, tabIndent, tabFlat].forEach(t => t?.classList.remove('active'));
+      if (mode === 'split') tabSplit?.classList.add('active');
+      if (mode === 'indent') tabIndent?.classList.add('active');
+      if (mode === 'flat') tabFlat?.classList.add('active');
+
+      try {
+        localStorage.setItem('syntax_tree_editor_view_mode', mode);
+      } catch (e) {}
+    };
+
+    tabSplit?.addEventListener('click', () => setMode('split'));
+    tabIndent?.addEventListener('click', () => setMode('indent'));
+    tabFlat?.addEventListener('click', () => setMode('flat'));
+
+    try {
+      const savedMode = localStorage.getItem('syntax_tree_editor_view_mode') || 'split';
+      setMode(savedMode);
+    } catch (e) {
+      setMode('split');
+    }
+  }
+
   populatePresets() {
     const select = document.getElementById('preset-select');
     if (!select) return;
@@ -100,8 +148,17 @@ class SyntaxTreeApp {
       const idx = parseInt(e.target.value, 10);
       if (!isNaN(idx) && PRESETS[idx]) {
         const code = PRESETS[idx].code;
-        document.getElementById('bracket-editor').value = code;
-        this.parseAndRender(code);
+        const { tree } = TreeParser.parse(code);
+        const indented = tree ? TreeParser.stringify(tree, true) : code;
+        const flat = tree ? TreeParser.stringify(tree, false) : code;
+
+        this.isSyncing = true;
+        if (this.editorIndented) this.editorIndented.value = indented;
+        if (this.editorFlat) this.editorFlat.value = flat;
+        this.isSyncing = false;
+
+        this.parseAndRender(indented);
+        if (tree) this.updateSentence(tree);
         this.ui.resetView();
         this.ui.showToast(`プリセット「${PRESETS[idx].title}」を読み込みました`);
       }
@@ -121,34 +178,79 @@ class SyntaxTreeApp {
   }
 
   setupEditorListeners() {
-    const editor = document.getElementById('bracket-editor');
     let debounceTimer = null;
 
-    editor.addEventListener('input', () => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        this.parseAndRender(editor.value);
-        this.syncPresetSelect(editor.value);
-        this.saveState(editor.value);
-      }, 150);
+    // Track active editor
+    this.editorIndented?.addEventListener('focus', () => {
+      this.activeEditor = this.editorIndented;
+    });
+    this.editorFlat?.addEventListener('focus', () => {
+      this.activeEditor = this.editorFlat;
     });
 
-    // Format code button
+    // Indented text editor input
+    this.editorIndented?.addEventListener('input', () => {
+      this.activeEditor = this.editorIndented;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (this.isSyncing) return;
+        const code = this.editorIndented.value;
+        this.parseAndRender(code);
+        this.syncPresetSelect(code);
+        this.saveState(code);
+
+        // Instantly reflect changes in the flat (normal) editor
+        if (this.currentTree && this.editorFlat) {
+          this.isSyncing = true;
+          this.editorFlat.value = TreeParser.stringify(this.currentTree, false);
+          this.updateSentence(this.currentTree);
+          this.isSyncing = false;
+        }
+      }, 100);
+    });
+
+    // Normal (Flat 1-line) text editor input
+    this.editorFlat?.addEventListener('input', () => {
+      this.activeEditor = this.editorFlat;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (this.isSyncing) return;
+        const code = this.editorFlat.value;
+        this.parseAndRender(code);
+        this.syncPresetSelect(code);
+        this.saveState(code);
+
+        // Instantly reflect changes in the indented editor
+        if (this.currentTree && this.editorIndented) {
+          this.isSyncing = true;
+          this.editorIndented.value = TreeParser.stringify(this.currentTree, true);
+          this.updateSentence(this.currentTree);
+          this.isSyncing = false;
+        }
+      }, 100);
+    });
+
+    // Format code button: Formats both indented and flat representations
     document.getElementById('btn-format-bracket')?.addEventListener('click', () => {
       if (this.currentTree) {
         const formatted = TreeParser.stringify(this.currentTree, true);
-        editor.value = formatted;
+        const flat = TreeParser.stringify(this.currentTree, false);
+        if (this.editorIndented) this.editorIndented.value = formatted;
+        if (this.editorFlat) this.editorFlat.value = flat;
+        this.updateSentence(this.currentTree);
         this.saveState(formatted);
         this.ui.showToast('コードをインデント整形しました');
       }
     });
 
-    // Clear editor button
+    // Clear editor button: Clears both editors
     document.getElementById('btn-clear-bracket')?.addEventListener('click', () => {
       if (confirm('エディタの内容をクリアしますか？')) {
-        editor.value = '[]';
+        if (this.editorIndented) this.editorIndented.value = '[]';
+        if (this.editorFlat) this.editorFlat.value = '[]';
         this.parseAndRender('[]');
-        editor.focus();
+        if (this.sentenceEl) this.sentenceEl.textContent = '';
+        (this.activeEditor || this.editorIndented)?.focus();
       }
     });
   }
@@ -296,7 +398,7 @@ class SyntaxTreeApp {
     // Share URL
     document.getElementById('btn-share-url')?.addEventListener('click', () => {
       const url = new URL(window.location.href);
-      const code = document.getElementById('bracket-editor').value;
+      const code = this.editorFlat?.value || this.editorIndented?.value || '';
       url.hash = encodeURIComponent(code);
       navigator.clipboard.writeText(url.toString()).then(() => {
         this.ui.showToast('共有リンクをクリップボードにコピーしました');
@@ -316,7 +418,17 @@ class SyntaxTreeApp {
     this.currentTree = tree;
     this.currentMovements = movements;
 
+    if (tree) {
+      this.updateSentence(tree);
+    }
+
     this.layoutAndRender();
+  }
+
+  updateSentence(tree) {
+    if (this.sentenceEl && tree) {
+      this.sentenceEl.textContent = TreeParser.getSentence(tree);
+    }
   }
 
   layoutAndRender() {
@@ -340,9 +452,16 @@ class SyntaxTreeApp {
   syncTreeToText() {
     if (!this.currentTree) return;
     const formatted = TreeParser.stringify(this.currentTree, true);
-    document.getElementById('bracket-editor').value = formatted;
+    const flat = TreeParser.stringify(this.currentTree, false);
+
+    this.isSyncing = true;
+    if (this.editorIndented) this.editorIndented.value = formatted;
+    if (this.editorFlat) this.editorFlat.value = flat;
+    this.isSyncing = false;
+
+    this.updateSentence(this.currentTree);
     this.saveState(formatted);
-    this.parseAndRender(formatted);
+    this.layoutAndRender();
   }
 
   saveState(text) {

@@ -317,17 +317,18 @@ export class UIController {
   }
 
   insertTextAtCursor(text) {
-    const ta = this.editorTextarea;
-    const start = ta.selectionStart;
-    const end = ta.selectionEnd;
+    const ta = this.app.activeEditor || document.getElementById('bracket-editor-indented') || document.getElementById('bracket-editor-flat');
+    if (!ta) return;
+    const start = ta.selectionStart !== undefined ? ta.selectionStart : ta.value.length;
+    const end = ta.selectionEnd !== undefined ? ta.selectionEnd : ta.value.length;
     const val = ta.value;
 
     ta.value = val.substring(0, start) + text + val.substring(end);
     ta.selectionStart = ta.selectionEnd = start + text.length;
     ta.focus();
 
-    // Trigger update
-    ta.dispatchEvent(new Event('input'));
+    // Trigger input event to run parser & sync both editors
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   showError(msg) {

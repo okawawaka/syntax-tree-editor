@@ -331,4 +331,26 @@ export class TreeParser {
       return `[${labelStr} ${childStrings.join(' ')}]`;
     }
   }
+
+  static getSentence(node) {
+    if (!node) return '';
+    const words = [];
+    function traverse(n) {
+      if (!n) return;
+      if (n.isLeaf && (!n.children || n.children.length === 0)) {
+        let txt = n.displayLabel !== undefined && n.displayLabel !== null ? n.displayLabel : n.label;
+        if (txt && !txt.startsWith('t_') && !txt.startsWith('t@') && txt !== '∅' && txt !== 'λ') {
+          words.push(txt);
+        }
+        return;
+      }
+      if (n.children) {
+        for (const c of n.children) {
+          traverse(c);
+        }
+      }
+    }
+    traverse(node);
+    return words.join(' ');
+  }
 }
