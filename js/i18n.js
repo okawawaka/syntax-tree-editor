@@ -71,6 +71,12 @@ window.SYNTAX_I18N = {
     btnToggleRoof: "△ 屋根",
     btnLinkArrow: "↳ 矢印",
     btnDeleteNode: "削除",
+    btnInlineConfirm: "確定 [Enter]",
+    btnInlineCancel: "取消 [Esc]",
+    nodeInlineEditTitle: "ラベル編集:",
+    nodeInlineChildTitle: "子ノード追加:",
+    nodeInlineSiblingTitle: "兄弟ノード追加:",
+    nodeInlinePlaceholder: "ラベル (例: DP, book)",
 
     // トースト通知
     toastCopyImage: "画像をクリップボードにコピーしました",
@@ -78,6 +84,12 @@ window.SYNTAX_I18N = {
     toastCopyUrl: "共有用URLをクリップボードにコピーしました",
     toastUndo: "元に戻しました (Undo)",
     toastRedo: "やり直しました (Redo)",
+    toastChildAdded: "子ノードを追加しました",
+    toastSiblingAdded: "兄弟ノードを追加しました",
+    toastLabelUpdated: "ラベルを更新しました",
+    toastRootNoSibling: "ルートノードには兄弟を追加できません",
+    toastRootNoDelete: "ルートノードは削除できません",
+    toastNodeDeleted: "ノードを削除しました",
     toastErrorEmpty: "構文木が空です",
 
     // 操作説明モーダル
@@ -201,6 +213,12 @@ window.SYNTAX_I18N = {
     btnToggleRoof: "△ Roof",
     btnLinkArrow: "↳ Arrow",
     btnDeleteNode: "Delete",
+    btnInlineConfirm: "Apply [Enter]",
+    btnInlineCancel: "Cancel [Esc]",
+    nodeInlineEditTitle: "Edit Label:",
+    nodeInlineChildTitle: "Add Child:",
+    nodeInlineSiblingTitle: "Add Sibling:",
+    nodeInlinePlaceholder: "Label (e.g. DP, book)",
 
     // Toast Notifications
     toastCopyImage: "Image copied to clipboard",
@@ -208,6 +226,12 @@ window.SYNTAX_I18N = {
     toastCopyUrl: "Share URL copied to clipboard",
     toastUndo: "Undo",
     toastRedo: "Redo",
+    toastChildAdded: "Child node added",
+    toastSiblingAdded: "Sibling node added",
+    toastLabelUpdated: "Label updated",
+    toastRootNoSibling: "Cannot add sibling to root node",
+    toastRootNoDelete: "Cannot delete root node",
+    toastNodeDeleted: "Node deleted",
     toastErrorEmpty: "Syntax tree is empty",
 
     // Help Modal
