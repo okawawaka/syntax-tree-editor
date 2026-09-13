@@ -699,7 +699,7 @@ header.app-header {
 /* Node Action Toolbar (when node selected) */
 .node-action-toolbar {
   position: absolute;
-  bottom: 20px;
+  bottom: 58px;
   left: 50%;
   transform: translateX(-50%) translateY(120%);
   background: var(--pure-white);
@@ -1175,6 +1175,12 @@ header.app-header {
 /* --------------------------------------------------------------------------
    RESPONSIVE DESIGN
    -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .node-action-toolbar {
+    bottom: 84px;
+  }
+}
+
 @media (max-width: 600px) {
   .app-main {
     flex-direction: column;
